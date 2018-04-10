@@ -18,10 +18,10 @@ mysql = MySQL(app)
 
 ################################################################################
 
-class USERTYPE(enum.Enum):
-    visitor = 'VISITOR'
-    owner = 'OWNER'
-    admin = 'ADMIN'
+# class USERTYPE(enum.Enum):
+#     visitor = "VISITOR"
+#     owner = "OWNER"
+#     admin = "ADMIN"
 
 ################################################################################
 
@@ -85,13 +85,12 @@ def VisitorRegister():
         email = form.email.data
         username = form.username.data
         password = sha256_crypt.encrypt(str(form.password.data))
-        usertype = USERTYPE.visitor
 
         # Create cursor
         cur = mysql.connection.cursor()
 
         # Execute query
-        cur.execute("INSERT INTO users(username, email, password, usertype) VALUES(%s, %s, %s, %s)", (username, email, password, usertype))
+        cur.execute("INSERT INTO users(username, email, password, usertype) VALUES(%s, %s, %s, %s)", (username, email, password, 'VISITOR'))
 
         # Commit to DB
         mysql.connection.commit()
@@ -130,7 +129,6 @@ def OwnerRegister():
         email = form.email.data
         username = form.username.data
         password = sha256_crypt.encrypt(str(form.password.data))
-        usertype = USERTYPE.owner
         propertytype = form.propertytype.data
 
         # Create cursor
@@ -138,7 +136,7 @@ def OwnerRegister():
 
         # Execute query
         cur.execute("INSERT INTO users(username, email, password, usertype) VALUES(%s, %s, %s, %s)",
-         (username, email, password, usertype))
+         (username, email, password, 'OWNER'))
 
         # Commit to DB
         mysql.connection.commit()
