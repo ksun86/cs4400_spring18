@@ -42,6 +42,7 @@ def login():
             # Get stored hash
             data = cur.fetchone()
             password = data['password']
+            usertype = data['usertype']
 
             # Compare Passwords
             if sha256_crypt.verify(password_candidate, password):
@@ -49,15 +50,22 @@ def login():
                 session['logged_in'] = True
                 session['username'] = username
 
-                flash('You are now logged in', 'success')
-                return redirect(url_for('dashboard'))
+                flash('You are now logged in', 'success')  
+                if usertype == "OWNER" :  
+                    return redirect(url_for('ownerfunctionality'))
+                if usertype == "VISITOR" :
+                    return redirect(url_for('visitorfunctionality')) 
+                if usertype == "ADMIN" :
+                    return redirect(url_for('adminfunctionality'))       
             else:
-                error = 'Invalid login'
+                error = 'Invalid password'
+              
                 return render_template('login.html', error=error)
             # Close connection
             cur.close()
         else:
             error = 'Username not found'
+        
             return render_template('login.html', error=error)
 
     return render_template('login.html')
@@ -70,6 +78,7 @@ class VisitorRegisterForm(Form):
     username = StringField('Username', [validators.Length(min=4, max=25)])
     email = StringField('Email', [validators.Length(min=6, max=50)])
     password = PasswordField('Password', [
+        validators.Length(min=8, max=50),
         validators.DataRequired(),
         validators.EqualTo('confirm', message='Passwords do not match')
     ])
@@ -112,6 +121,7 @@ class OwnerRegisterForm(Form):
     username = StringField('Username', [validators.Length(min=4, max=25)])
     email = StringField('Email', [validators.Length(min=6, max=50)])
     password = PasswordField('Password', [
+        validators.Length(min=8, max=50),
         validators.DataRequired(),
         validators.EqualTo('confirm', message='Passwords do not match')
     ])
