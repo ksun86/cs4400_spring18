@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+    <h1>Your Visitor History</h1>
+    <p>Click on a property to view its details</p>
+
+    <table class="table table-striped">
+        <tr>
+            <th>Name</th>
+            <th>Date Logged</th>
+            <th>Your Rating</th>
+        </tr>
+        <!-- we'll need a for loop to iterate through for each row of the table -->
+            <tr>
+                <td><a href="/">GT Garden</a></td>
+                <td>2018-01-21</td>
+                <td>5</td>
+            </tr>
+    </table>
+
+    <a href="/" class="btn btn-primary">Back</a>
+
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+    <h1>Unconfirmed Properties</h1>
+    <p>Click on a property to manage it</p>
+
+    <table class="table table-striped">
+        <tr>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Address</th>
+            <th>City</th>
+            <th>Zip</th>
+            <th>Size</th>
+            <th>Type</th>
+            <th>Public</th>
+            <th>Commercial</th>
+            <th>ID</th>
+        </tr>
+        <!-- we'll need a for loop to iterate through for each row of the table -->
+            <tr>
+                <td><a href="/">East Lake Urban Farm</a></td>
+                <td>Owner1</td>
+                <td>2nd Avenue</td>
+                <td>Atlanta</td>
+                <td>30317</td>
+                <td>20</td>
+                <td>Farm</td>
+                <td>No</td>
+                <td>Yes</td>
+                <td>12345</td>
+            </tr>
+    </table>
+
+    <!-- insert searching functionality -->
+    <a href="/" class="btn btn-primary">Search</a>
+    <div class="text-right">
+        <a href="/" class="btn btn-primary">Back</a>
+    </div>
+
+{% endblock %}

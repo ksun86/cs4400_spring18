@@ -1,0 +1,53 @@
+ Username: cs4400_team_73
+        Password: _mC5s2Ia
+
+
+
+log in screen (home/welcome screen) - Kelly
+
+new owner registration
+new visitor registration - Lauren
+
+owner functionality
+visitor functionality
+admin functionality - Josh
+
+manage property (owner, admin)
+add new property
+
+view other owners' properties - Kai
+visitor overview - Aashini
+owner overview - Aashini
+
+confirmed properties - Josh
+unconfirmed properties - Josh
+
+approved crops - Aashini
+pending crops - Kai
+
+property details (owner, visitor) - Josh
+visitor history - Josh
+
+
+
+OWNER:
+owner functionality
+view other owners' properties
+property details (owner)
+property manage (owner)
+add new property
+
+ADMIN:
+unconfirmed properties
+confirmed properties
+admin functionality
+property manage (admin)
+visitor overview
+owner overview
+approved crops
+pending crops
+
+VISITOR:
+visitor functionality
+property details (visitor)
+visitor history
