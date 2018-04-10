@@ -130,14 +130,15 @@ def OwnerRegister():
         email = form.email.data
         username = form.username.data
         password = sha256_crypt.encrypt(str(form.password.data))
+        usertype = USERTYPE.owner
         propertytype = form.propertytype.data
 
         # Create cursor
         cur = mysql.connection.cursor()
 
         # Execute query
-        cur.execute("INSERT INTO users(name, email, username, password, propertytype) VALUES(%s, %s, %s, %s, %s)",
-         (name, email, username, password, propertytype))
+        cur.execute("INSERT INTO users(username, email, password, usertype) VALUES(%s, %s, %s, %s)",
+         (username, email, password, usertype))
 
         # Commit to DB
         mysql.connection.commit()
@@ -147,7 +148,7 @@ def OwnerRegister():
 
         flash('You are now registered and can log in', 'success')
 
-        return redirect(url_for('login'))
+        return redirect(url_for('ownerfunctionality'))
     return render_template('OwnerRegister.html', form=form)
 
 #################################################################################

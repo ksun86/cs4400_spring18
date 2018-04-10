@@ -1,0 +1,77 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+    <h1>Welcome Owner1</h1>
+
+
+    <table class="table table-striped">
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th>City</th>
+            <th>Zip</th>
+            <th>Size</th>
+            <th>Type</th>
+            <th>Public</th>
+            <th>Commercial</th>
+            <th>ID</th>
+            <th>isValid</th>
+            <th>Visits</th>
+            <th>Avg. Rating</th>
+        </tr>
+        <!-- we'll need a for loop to iterate through for each row of the table -->
+            <tr>
+                <td><a href="/">Atwood Garden</a></td>
+                <td>Atwood St</td>
+                <td>Atlanta</td>
+                <td>30308</td>
+                <td>1</td>
+                <td>Garden</td>
+                <td>True</td>
+                <td>False</td>
+                <td>00400</td>
+                <td>True</td>
+                <td>3</td>
+                <td>4.7</td>
+            </tr>
+    </table>
+
+    <select>
+        <option value = searchby>Search by...</option>
+        <option value = name>Name</option>
+        <option value = address>Address</option>
+        <option value = city>City</option>
+        <option value = zip>Zip</option>
+        <option value = size>Size</option>
+        <option value = type>Type</option>
+        <option value = public>Public</option>
+        <option value = commerical>Commerical</option>
+        <option value = id>ID</option>
+        <option value = visits>Visits</option>
+        <option value = avgrating>Avg. Rating</option>
+
+
+    </select>
+
+
+    <div class = "form-group">
+        <input type= "text" name="Search term", class= "form-control", value= {{request.form.search}}>
+    </div>
+
+    <div class = "text-align:left">
+        <a href="/" class="btn btn-primary">Search Properties</a>
+    </div>
+    <div style = "text-align:center">
+        <a href="/" class="btn btn-primary">Manage Property</a>
+    </div>
+    <div style = "text-align:center">
+        <a href="/" class="btn btn-primary">Add Property</a>
+    </div>
+    <div style = "text-align:center">
+        <a href="/" class="btn btn-primary">View Other Property</a>
+    </div>
+    <div class = "text-align:right"> <!--LOG OUT WRONG PLACE-->
+        <a href="/" class="btn btn-primary">Log Out</a>
+    </div>
+
+{% endblock %}
