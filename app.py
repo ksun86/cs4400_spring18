@@ -3,8 +3,25 @@ from flask_mysqldb import MySQL
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
+import enum
 
 app = Flask(__name__)
+
+
+app.config['MYSQL_HOST'] = 'academic-mysql.cc.gatech.edu'
+app.config['MYSQL_USER'] = 'cs4400_team_73'
+app.config['MYSQL_PASSWORD'] = '9pRZGQZH'
+app.config['MYSQL_DB'] = 'cs4400_team_73'
+app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+
+mysql = MySQL(app)
+
+################################################################################
+
+class USERTYPE(enum.Enum):
+    visitor = 'VISITOR'
+    owner = 'OWNER'
+    admin = 'ADMIN'
 
 ################################################################################
 
@@ -68,12 +85,13 @@ def VisitorRegister():
         email = form.email.data
         username = form.username.data
         password = sha256_crypt.encrypt(str(form.password.data))
+        usertype = USERTYPE.visitor
 
         # Create cursor
         cur = mysql.connection.cursor()
 
         # Execute query
-        cur.execute("INSERT INTO users(name, email, username, password) VALUES(%s, %s, %s, %s)", (name, email, username, password))
+        cur.execute("INSERT INTO users(username, email, password, usertype) VALUES(%s, %s, %s, %s)", (username, email, password, usertype))
 
         # Commit to DB
         mysql.connection.commit()
@@ -83,7 +101,7 @@ def VisitorRegister():
 
         flash('You are now registered and can log in', 'success')
 
-        return redirect(url_for('login'))
+        return redirect(url_for('visitorfunctionality'))
     return render_template('VisitorRegister.html', form=form)
 
 #################################################################################
@@ -134,15 +152,6 @@ def OwnerRegister():
 
 #################################################################################
 
-@app.route('/ownerregistration')
-def ownerregistration():
-    return render_template('ownerregistration.html')
-
-@app.route('/visitorregistration')
-def visitorregistration():
-    return render_template('visitorregistration.html')
-
-################################################################################
 
 @app.route('/ownerfunctionality')
 def ownerfunctionality():
