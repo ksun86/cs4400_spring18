@@ -1,6 +1,6 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
 from flask_mysqldb import MySQL
-from wtforms import Form, StringField, TextAreaField, PasswordField, validators
+from wtforms import Form, StringField, TextAreaField, PasswordField, SelectField, BooleanField, IntegerField, SelectMultipleField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
 import enum
@@ -50,22 +50,22 @@ def login():
                 session['logged_in'] = True
                 session['username'] = username
 
-                flash('You are now logged in', 'success')  
-                if usertype == "OWNER" :  
+                flash('You are now logged in', 'success')
+                if usertype == "OWNER" :
                     return redirect(url_for('ownerfunctionality'))
                 if usertype == "VISITOR" :
-                    return redirect(url_for('visitorfunctionality')) 
+                    return redirect(url_for('visitorfunctionality'))
                 if usertype == "ADMIN" :
-                    return redirect(url_for('adminfunctionality'))       
+                    return redirect(url_for('adminfunctionality'))
             else:
                 error = 'Invalid password'
-              
+
                 return render_template('login.html', error=error)
             # Close connection
             cur.close()
         else:
             error = 'Username not found'
-        
+
             return render_template('login.html', error=error)
 
     return render_template('login.html')
@@ -112,7 +112,7 @@ def VisitorRegister():
         return redirect(url_for('visitorfunctionality'))
     return render_template('VisitorRegister.html', form=form)
 
-#################################################################################
+################################################################################
 
 
 # Register Form Class
@@ -125,9 +125,25 @@ class OwnerRegisterForm(Form):
         validators.DataRequired(),
         validators.EqualTo('confirm', message='Passwords do not match')
     ])
-
     confirm = PasswordField('Confirm Password')
-    propertytype = StringField('Property Type', [validators.Length(min=1, max=50)])
+
+    propertyname = StringField('Property Name', [validators.Length(min=1, max=100)])
+    streetaddress = StringField('Address', [validators.Length(min=1, max=50)])
+    city = StringField('City', [validators.Length(min=1, max=50)])
+    zipcode = IntegerField('Zip Code', [validators.Length(min=5, max=9)])
+    size = IntegerField('Size (in acres)', [validators.Length(min=1, max=5)])
+    propertytype = SelectField('Property Type',
+        [validators.NoneOf('', message='Please select a property type')],
+        choices=[('', ''), ('FARM', 'Farm'), ('GARDEN', 'Garden'), ('ORCHARD', 'Orchard')] # (value passed to db, value shown to user)
+    )
+    achoices = ['dog','cat','zebra']
+    cchoices = ['apple','orange','banana']
+    animals = SelectMultipleField('Which animals will your property have (Hold CTRL and click to select multiple)',
+        [validators.NoneOf('', message='Please select a property type')], choices=[(animal, animal) for animal in achoices])
+    crops = SelectMultipleField('Which crops will your property have (Hold CTRL and click to select multiple)',
+        [validators.NoneOf('', message='Please select a property type')], choices=[(crop, crop) for crop in cchoices])
+    public = BooleanField('If your property is public, check the box below:')
+    commercial = BooleanField('If your property is commercial, check the box below:')
 
 ################################################################################
 # User Register
@@ -139,7 +155,19 @@ def OwnerRegister():
         email = form.email.data
         username = form.username.data
         password = sha256_crypt.encrypt(str(form.password.data))
+
+        propertyname = form.propertyname.data
+        streetaddress = form.propertytype.data
+        city = form.city.data
+        zipcode = form.zipcode.data
+        size = form.size.data
         propertytype = form.propertytype.data
+        # form.animals.choices = [('',''),('dog','dog')]
+        # form.crops.choices = [('',''),('apple','apple')]
+        animals = form.animals.data
+        crops = form.crops.data
+        public = form.public.data
+        commercial = form.commercial.data
 
         # Create cursor
         cur = mysql.connection.cursor()
@@ -147,7 +175,7 @@ def OwnerRegister():
         # Execute query
         cur.execute("INSERT INTO users(username, email, password, usertype) VALUES(%s, %s, %s, %s)",
          (username, email, password, 'OWNER'))
-
+# property property(id, name, size, IsCommercial, IsPublic, street, city, zip, propertytype, owner, approvedby)
         # Commit to DB
         mysql.connection.commit()
 
