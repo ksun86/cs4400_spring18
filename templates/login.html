@@ -16,6 +16,9 @@
           <label>Password</label>
           <input type="password" name="password" class="form-control" value={{request.form.password}}>
         </div>
+        {% if error %}
+        <p class=error><strong>Error:</strong> {{ error }}
+        {% endif %}
         <div class="text-right">
             <button type="submit" class="btn btn-primary">Log In</button>
         </div>
