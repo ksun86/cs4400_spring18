@@ -22,17 +22,17 @@
         </tr>
         {% for property in properties %}
             <tr>
-                <td><a href="/propertydetails/{{property.id}}">{{property.name}}</a></td>
-                <td>{{property.streetaddress}}</td>
+                <td><a href="/PropertyDetails/{{property.propertyID}}">{{property.propertyName}}</a></td>
+                <td>{{property.address}}</td>
                 <td>{{property.city}}</td>
-                <td>{{property.zipcode}}</td>
+                <td>{{property.zipCode}}</td>
                 <td>{{property.size}}</td>
-                <td>{{property.propertytype}}</td>
-                <td>{{property.IsPublic}}</td>
-                <td>{{property.IsCommercial}}</td>
-                <td>{{property.prepertyid}}</td>
-                <td>{{property.IsValid}}</td>
-                <!-- DERIVED ATTRIBUTES HAVE TO FIGURE THIS OUT -->
+                <td>{{property.propertyType}}</td>
+                <td>{{property.isPublic}}</td>
+                <td>{{property.isCommercial}}</td>
+                <td>{{property.propertyID}}</td>
+                <!-- DERIVED ATTRIBUTES: HAVE TO FIGURE THIS OUT -->
+                <td>{{property.isValid}}</td>
                 <td>{{property.numvisits}}</td>
                 <td>{{property.rating}}.7</td>
             </tr>
@@ -62,14 +62,15 @@
         <input type= "text" name="Search term", class= "form-control", value= {{request.form.search}}>
     </div>
     <div class = "text-align: right">
+        <!-- figure out how to appropriately redirect the search properties -->
         <a href="/" class="btn btn-primary">Search Properties</a>
     </div>
 
     <div style = "text-align:center">
-        <a href="/visitorhistory" class="btn btn-primary">View Visit History</a>
+        <a href="/VisitorHistory" class="btn btn-primary">View Visit History</a>
     </div>
     <div class = "text-left">
-        <a href="/logout" class="btn btn-primary">Log Out</a>
+        <a href="/Logout" class="btn btn-primary">Log Out</a>
     </div>
 
 

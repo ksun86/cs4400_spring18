@@ -7,9 +7,8 @@ import enum
 
 app = Flask(__name__)
 
-
-app.config['MYSQL_HOST'] = 'academic-mysql.cc.gatech.edu'
 # mysql -u cs4400_team_73 -p
+app.config['MYSQL_HOST'] = 'academic-mysql.cc.gatech.edu'
 app.config['MYSQL_USER'] = 'cs4400_team_73'
 app.config['MYSQL_PASSWORD'] = '9pRZGQZH'
 app.config['MYSQL_DB'] = 'cs4400_team_73'
@@ -17,82 +16,69 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
-propertyid = 0
-
-@app.route('/test')
-def test():
-    return render_template('AddNewProperty.html')
-################################################################################
-
-# class USERTYPE(enum.Enum):
-#     visitor = "VISITOR"
-#     owner = "OWNER"
-#     admin = "ADMIN"
-
-# ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f
+propertyID = 0
 
 ################################################################################
 
 @app.route('/', methods=['GET', 'POST'])
-def login():
+def Login():
     if request.method == 'POST':
         # Get Form Fields
         username = request.form['username']
-        password_candidate = request.form['password']
+        passwordCandidate = request.form['password']
 
         # Create cursor
         cur = mysql.connection.cursor()
 
         # Get user by username
-        result = cur.execute("SELECT * FROM users WHERE username = %s", [username])
+        result = cur.execute("SELECT * FROM User WHERE Username = %s", [username])
 
         if result > 0:
             # Get stored hash
             data = cur.fetchone()
             password = data['password']
-            usertype = data['usertype']
+            userType = data['userType']
 
             # Compare Passwords
-            if sha256_crypt.verify(password_candidate, password):
+            if sha256_crypt.verify(passwordCandidate, password):
                 # Passed
-                session['logged_in'] = True
+                session['loggedIn'] = True
                 session['username'] = username
-                session['usertype'] = usertype
+                session['userType'] = userType
 
                 flash('You are now logged in', 'success')
-                if usertype == "OWNER" :
-                    return redirect(url_for('ownerfunctionality'))
-                if usertype == "VISITOR" :
-                    return redirect(url_for('visitorfunctionality'))
-                if usertype == "ADMIN" :
-                    return redirect(url_for('adminfunctionality'))
+                if userType == "OWNER" :
+                    return redirect(url_for('OwnerFunctionality'))
+                if userType == "VISITOR" :
+                    return redirect(url_for('VisitorFunctionality'))
+                if userType == "ADMIN" :
+                    return redirect(url_for('AdminFunctionality'))
             else:
                 error = 'Invalid password'
 
-                return render_template('login.html', error=error)
+                return render_template('Login.html', error=error)
             # Close connection
             cur.close()
         else:
             error = 'Username not found'
 
-            return render_template('login.html', error=error)
-
-    return render_template('login.html')
+            return render_template('Login.html', error=error)
+    return render_template('Login.html')
 
 def is_logged_in(f):
     @wraps(f)
     def wrap(*args, **kwargs):
-        if 'logged_in' in session:
+        if 'loggedIn' in session:
             return f(*args, **kwargs)
         else:
-            return redirect(url_for('login'))
+            return redirect(url_for('Login'))
     return wrap
 
-@app.route('/logout')
+@app.route('/Logout')
 @is_logged_in
-def logout():
+def Logout():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for('Login'))
 
 ################################################################################
 # User Registration Form Class
@@ -108,8 +94,8 @@ class RegisterForm(Form):
 
 ################################################################################
 # User Registration
-@app.route('/registration/<string:utype>', methods=['GET', 'POST'])
-def Register(utype):
+@app.route('/Registration/<string:utype>', methods=['GET', 'POST'])
+def Register(userType):
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
         username = form.username.data
@@ -120,8 +106,8 @@ def Register(utype):
         cur = mysql.connection.cursor()
 
         # Execute query
-        cur.execute("INSERT INTO users(username, email, password, usertype) VALUES(%s, %s, %s, %s)",
-            (username, email, password, utype.upper()))
+        cur.execute("INSERT INTO User(Username, Email, Password, UserType) VALUES(%s, %s, %s, %s)",
+            (username, email, password, userType))
 
         # Commit to DB
         mysql.connection.commit()
@@ -131,58 +117,59 @@ def Register(utype):
 
         flash('You are now registered and can log in', 'success')
 
-        session['logged_in'] = True
+        session['loggedIn'] = True
         session['username'] = username
+        session['userType'] = userType
 
-        if utype == 'visitor':
-            return redirect(url_for('visitorfunctionality'))
-        elif utype == 'owner':
-            return redirect(url_for('addproperty'))
-    return render_template('registration.html', form=form)
+        if userType == 'VISITOR':
+            return redirect(url_for('VisitorFunctionality'))
+        elif userType == 'OWNER':
+            return redirect(url_for('AddProperty'))
+    return render_template('Registration.html', form=form)
 
 ################################################################################
 # Add Property Form Class
 class AddPropertyForm(Form):
-    propertyname = StringField('Property Name', [validators.Length(min=1, max=100)])
-    streetaddress = StringField('Address', [validators.Length(min=1, max=50)])
+    propertyName = StringField('Property Name', [validators.Length(min=1, max=100)])
+    address = StringField('Address', [validators.Length(min=1, max=50)])
     city = StringField('City', [validators.Length(min=1, max=50)])
-    zipcode = IntegerField('Zip Code', [validators.NumberRange(min=10000, max=99999)])
+    zipCode = IntegerField('Zip Code', [validators.NumberRange(min=10000, max=99999)])
     size = IntegerField('Size (in acres)', [validators.NumberRange(min=1, max=10000)])
-    propertytype = SelectField('Property Type',
+    propertyType = SelectField('Property Type',
         [validators.NoneOf('', message='Please select a property type')],
         choices=[('', ''), ('FARM', 'Farm'), ('GARDEN', 'Garden'), ('ORCHARD', 'Orchard')] # (value passed to db, value shown to user)
     )
-    public = BooleanField('If your property is public, check the box below:')
-    commercial = BooleanField('If your property is commercial, check the box below:')
+    isPublic = BooleanField('If your property is public, check the box below:')
+    isCommercial = BooleanField('If your property is commercial, check the box below:')
 
 ################################################################################
 # Add Property
-@app.route('/addproperty', methods=['GET', 'POST'])
+@app.route('/AddProperty', methods=['GET', 'POST'])
 @is_logged_in
-def addproperty():
+def AddProperty():
     form = AddPropertyForm(request.form)
     if request.method == 'POST' and form.validate():
 
-        propertyname = form.propertyname.data
-        streetaddress = form.propertytype.data
+        propertyName = form.propertyName.data
+        address = form.address.data
         city = form.city.data
-        zipcode = form.zipcode.data
+        zipCode = form.zipCode.data
         size = form.size.data
-        propertytype = form.propertytype.data
-        public = form.public.data
-        commercial = form.commercial.data
+        propertyType = form.propertyType.data
+        isPublic = form.isPublic.data
+        isCommercial = form.isCommercial.data
 
-        session['propertytype'] = propertytype
-        global propertyid
-        propertyid += 1
-        session['propertyid'] = propertyid
+        session['propertyType'] = propertyType
+        global propertyID
+        propertyID += 1
+        session['propertyID'] = propertyID
 
         # Create cursor
         cur = mysql.connection.cursor()
 
         # Execute query
-        cur.execute("INSERT INTO property(id, name, size, IsCommercial, IsPublic, street, city, zip, propertytype, owner) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (propertyid, propertyname, size, commercial, public, streetaddress, city, zipcode, propertytype, session['username']))
+        cur.execute("INSERT INTO property(ID, Name, Size, IsCommercial, IsPublic, Street, city, zip, PropertyType, Owner) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (propertyID, propertyName, size, isCommercial, isPublic, address, city, zipCode, propertyType, session['username']))
 
         # Commit to DB
         mysql.connection.commit()
@@ -190,8 +177,8 @@ def addproperty():
         # Close connection
         cur.close()
 
-        return redirect(url_for('additems'))
-    return render_template('addproperty.html', form=form)
+        return redirect(url_for('AddItems'))
+    return render_template('AddProperty.html', form=form)
 
 #################################################################################
 # Add Items Form Class
@@ -201,49 +188,45 @@ class AddItemsForm(Form):
 
 #################################################################################
 # User Registration
-@app.route('/additems', methods=['GET', 'POST'])
+@app.route('/AddItems', methods=['GET', 'POST'])
 @is_logged_in
-def additems():
+def AddItems():
     # Create cursor
     cur = mysql.connection.cursor()
 
     # Create cursor
     cur = mysql.connection.cursor()
 
-    cur.execute("SELECT name, type FROM farmitem WHERE IsApproved")
+    cur.execute("SELECT Name, Type FROM FarmItem WHERE IsApproved")
 
     data = cur.fetchall()
     form = AddItemsForm(request.form)
-    animalchoices = []
-    orchardchoices = []
-    gardenchoices = []
+    animalChoices = []
+    orchardChoices = []
+    gardenChoices = []
     for tup in data:
         if tup['type'] == 'ANIMAL':
-            animalchoices.append(tup['name'])
-        elif tup['type'] == 'FRUIT':
-            orchardchoices.append(tup['name'])
-        elif tup['type'] == 'NUT':
-            orchardchoices.append(tup['name'])
-        elif tup['type'] == 'VEGETABLE':
-            gardenchoices.append(tup['name'])
-        elif tup['type'] == 'FLOWER':
-            gardenchoices.append(tup['name'])
+            animalChoices.append(tup['name'])
+        elif tup['type'] == 'FRUIT' or tup['type'] == 'NUT':
+            orchardChoices.append(tup['name'])
+        elif tup['type'] == 'VEGETABLE' or tup['type'] == 'FLOWER':
+            gardenChoices.append(tup['name'])
 
-    if session['propertytype'] == 'FARM':
-        form.animals.choices = [(animal,animal) for animal in animalchoices]
-        form.crops.choices = [(crop,crop) for crop in gardenchoices + orchardchoices]
-    elif session['propertytype'] == 'GARDEN':
-        form.crops.choices = [(crop,crop) for crop in gardenchoices]
-    elif session['propertytype'] == 'ORCHARD':
-        form.crops.choices = [(crop,crop) for crop in orchardchoices]
+    if session['propertyType'] == 'FARM':
+        form.animals.choices = [(animal,animal) for animal in animalChoices]
+        form.crops.choices = [(crop,crop) for crop in gardenChoices + orchardChoices]
+    elif session['propertyType'] == 'GARDEN':
+        form.crops.choices = [(crop,crop) for crop in gardenChoices]
+    elif session['propertyType'] == 'ORCHARD':
+        form.crops.choices = [(crop,crop) for crop in orchardChoices]
 
     if request.method == 'POST' and form.validate():
         items = form.animals.data + form.crops.data
 
         # Execute query
         for item in items:
-            cur.execute("INSERT INTO has(propertyid, itemname) VALUES(%s, %s)",
-                (session['propertyid'], item))
+            cur.execute("INSERT INTO Has(PropertyID, ItemName) VALUES(%s, %s)",
+                (session['propertyID'], item))
 
         # Commit to DB
         mysql.connection.commit()
@@ -251,95 +234,95 @@ def additems():
         # Close connection
         cur.close()
 
-        return redirect(url_for('ownerfunctionality'))
-    return render_template('additems.html', form=form)
+        return redirect(url_for('OwnerFunctionality'))
+    return render_template('AddItems.html', form=form)
 #################################################################################
 
-@app.route('/ownerfunctionality')
+@app.route('/OwnerFunctionality')
 @is_logged_in
-def ownerfunctionality():
-    return render_template('ownerfunctionality.html')
+def OwnerFunctionality():
+    return render_template('OwnerFunctionality.html')
 
-@app.route('/adminfunctionality')
+@app.route('/AdminFunctionality')
 @is_logged_in
-def adminfunctionality():
-    return render_template('adminfunctionality.html')
+def AdminFunctionality():
+    return render_template('AdminFunctionality.html')
 
-@app.route('/visitorfunctionality')
+@app.route('/VisitorFunctionality')
 @is_logged_in
-def visitorfunctionality():
+def VisitorFunctionality():
     # Create cursor
     cur = mysql.connection.cursor()
 
     # Get articles
-    result = cur.execute("SELECT * FROM property WHERE NOT approvedby = null") # approved by must have some value
+    result = cur.execute("SELECT * FROM Property WHERE NOT ApprovedBy = null") # approved by must have some value
 
     properties = cur.fetchall()
-
-    return render_template('visitorfunctionality.html', properties=properties)
 
     # Close connection
     cur.close()
 
-################################################################################
-
-@app.route('/manageproperty')
-@is_logged_in
-def manageproperty():
-    return render_template('manageproperty.html')
+    return render_template('VisitorFunctionality.html', properties=properties)
 
 ################################################################################
 
-@app.route('/otherownersproperties')
+@app.route('/ManageProperty')
 @is_logged_in
-def otherownersproperties():
-    return render_template('otherownersproperties.html')
-
-@app.route('/visitoroverview')
-@is_logged_in
-def visitoroverview():
-    return render_template('visitoroverview.html')
-
-@app.route('/owneroverview')
-@is_logged_in
-def owneroverview():
-    return render_template('owneroverview.html')
+def ManageProperty():
+    return render_template('ManageProperty.html')
 
 ################################################################################
 
-@app.route('/confirmedproperties')
+@app.route('/OtherOwnersProperties')
 @is_logged_in
-def confirmedproperties():
-    return render_template('confirmedproperties.html')
+def OtherOwnersProperties():
+    return render_template('OtherOwnersProperties.html')
 
-@app.route('/unconfirmedproperties')
+@app.route('/VisitorOverview')
 @is_logged_in
-def unconfirmedproperties():
-    return render_template('unconfirmedproperties.html')
+def VisitorOverview():
+    return render_template('VisitorOverview.html')
+
+@app.route('/OwnerOverview')
+@is_logged_in
+def OwnerOverview():
+    return render_template('OwnerOverview.html')
 
 ################################################################################
 
-@app.route('/approvedcrops')
+@app.route('/ConfirmedProperties')
 @is_logged_in
-def approvedcrops():
-    return render_template('approvedcrops.html')
+def ConfirmedProperties():
+    return render_template('ConfirmedProperties.html')
 
-@app.route('/pendingcrops')
+@app.route('/UnconfirmedProperties')
 @is_logged_in
-def pendingcrops():
-    return render_template('pendingcrops.html')
+def UnconfirmedProperties():
+    return render_template('UnconfirmedProperties.html')
 
 ################################################################################
 
-@app.route('/propertydetails')
+@app.route('/ApprovedItems')
 @is_logged_in
-def propertydetails():
-    return render_template('propertydetails.html')
+def ApprovedItems():
+    return render_template('ApprovedItems.html')
 
-@app.route('/visitorhistory')
+@app.route('/PendingItems')
 @is_logged_in
-def visitorhistory():
-    return render_template('visitorhistory.html')
+def PendingItems():
+    return render_template('PendingItems.html')
+
+################################################################################
+
+@app.route('/PropertyDetails')
+@is_logged_in
+def PropertyDetails():
+    return render_template('PropertyDetails.html')
+
+@app.route('/VisitorHistory')
+@is_logged_in
+def VisitorHistory():
+    return render_template('VisitorHistory.html')
 
 ################################################################################
 

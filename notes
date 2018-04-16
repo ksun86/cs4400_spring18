@@ -1,0 +1,17 @@
+pages left to work on:
+    Owner/VisitorFunctionality & OtherOwnersProperties (Aashini, Kelly, Lauren)
+
+    Owner/VisitorOverview (Kai)
+
+    Approved/PendingItems (Josh)
+    Confirmed/UnconfirmedProperties (Josh)
+
+    Admin/OwnerManageProperty
+    VisitorHistory
+    PropertyDetails
+
+case conventions:
+    htmls, method, and routes - PascalCase
+    classes - PascalCase
+    variables - camelCase
+    attributes and tables - Same as phase 2 answer key (Mostly PascalCase)

@@ -6,28 +6,28 @@
   <form method="POST" action="">
     <h3>Enter the following information about your property:</h3>
     <div class="form-group">
-      {{render_field(form.propertyname, class_="form-control")}}
+      {{render_field(form.propertyName, class_="form-control")}}
     </div>
     <div class="form-group">
-      {{render_field(form.propertytype, class_="form-control")}}
+      {{render_field(form.propertyType, class_="form-control")}}
     </div>
     <div class="form-group">
-      {{render_field(form.streetaddress, class_="form-control")}}
+      {{render_field(form.address, class_="form-control")}}
     </div>
     <div class="form-group">
       {{render_field(form.city, class_="form-control")}}
     </div>
     <div class="form-group">
-      {{render_field(form.zipcode, class_="form-control")}}
+      {{render_field(form.zipCode, class_="form-control")}}
     </div>
     <div class="form-group">
       {{render_field(form.size, class_="form-control")}}
     </div>
     <div class="form-group">
-      {{render_field(form.public, class_="form-control")}}
+      {{render_field(form.isPublic, class_="form-control")}}
     </div>
     <div class="form-group">
-      {{render_field(form.commercial, class_="form-control")}}
+      {{render_field(form.isCommercial, class_="form-control")}}
     </div>
     <p><input type="submit" class="btn btn-primary" value="Submit"></p>
   </form>
