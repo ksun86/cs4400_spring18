@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<div class="jumbotron text-center">
+    <h1>Pending Approval Animals/Crops</h1>
+</div>
+
+<label>Name:</label>
+    <select>
+        <option value="true">Crop/Animal 1</option>
+        <option value="false">Crop/Animal 2</option>
+    </select>
+
+<label>Type:</label>
+    <select>
+        <option value="true">Animal/Vegetable/Fruit/Nut</option>
+        <option value="false">Animal/Vegetable/Fruit/Nut</option>
+    </select>
+
+<div class="text-right">
+    <button type="submit" class="btn btn-primary">Approve Selection</button>
+</div>
+
+<div class="text-right">
+    <button type="submit" class="btn btn-primary">Delete Selection</button>
+</div>
+
+<div class="text-right">
+    <button type="submit" class="btn btn-primary">Back</button>
+</div>
+
+{% endblock %}

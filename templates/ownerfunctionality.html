@@ -5,6 +5,7 @@
 
 
     <table class="table table-striped">
+    <p>Click on a property to manage it</p>
         <tr>
             <th>Name</th>
             <th>Address</th>
@@ -21,7 +22,7 @@
         </tr>
         <!-- we'll need a for loop to iterate through for each row of the table -->
             <tr>
-                <td><a href="/">Atwood Garden</a></td>
+                <td><a href="/manageproperty">Atwood Garden</a></td>
                 <td>Atwood St</td>
                 <td>Atlanta</td>
                 <td>30308</td>
@@ -62,16 +63,13 @@
         <a href="/" class="btn btn-primary">Search Properties</a>
     </div>
     <div style = "text-align:center">
-        <a href="/" class="btn btn-primary">Manage Property</a>
+        <a href="/addproperty" class="btn btn-primary">Add Property</a>
     </div>
     <div style = "text-align:center">
-        <a href="/" class="btn btn-primary">Add Property</a>
-    </div>
-    <div style = "text-align:center">
-        <a href="/" class="btn btn-primary">View Other Property</a>
+        <a href="/otherownersproperties" class="btn btn-primary">View Other Owners' Properties</a>
     </div>
     <div class = "text-align:right"> <!--LOG OUT WRONG PLACE-->
-        <a href="/" class="btn btn-primary">Log Out</a>
+        <a href="/logout" class="btn btn-primary">Log Out</a>
     </div>
 
 {% endblock %}

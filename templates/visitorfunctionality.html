@@ -1,10 +1,11 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-    <h1>Welcome Visitor</h1>
-    <p>All public, validated properties</p>
+    <h1>Welcome {{session.username}}</h1>
+    <p>Click on a property to view its details</p>
 
     <table class="table table-striped">
+
         <tr>
             <th>Name</th>
             <th>Address</th>
@@ -19,32 +20,34 @@
             <th>Visits</th>
             <th>Avg. Rating</th>
         </tr>
-        <!-- we'll need a for loop to iterate through for each row of the table -->
+        {% for property in properties %}
             <tr>
-                <td><a href="/">Atwood Garden</a></td>
-                <td>Atwood St</td>
-                <td>Atlanta</td>
-                <td>30308</td>
-                <td>1</td>
-                <td>Garden</td>
-                <td>True</td>
-                <td>False</td>
-                <td>00400</td>
-                <td>True</td>
-                <td>3</td>
-                <td>4.7</td>
+                <td><a href="/propertydetails/{{property.id}}">{{property.name}}</a></td>
+                <td>{{property.streetaddress}}</td>
+                <td>{{property.city}}</td>
+                <td>{{property.zipcode}}</td>
+                <td>{{property.size}}</td>
+                <td>{{property.propertytype}}</td>
+                <td>{{property.IsPublic}}</td>
+                <td>{{property.IsCommercial}}</td>
+                <td>{{property.prepertyid}}</td>
+                <td>{{property.IsValid}}</td>
+                <!-- DERIVED ATTRIBUTES HAVE TO FIGURE THIS OUT -->
+                <td>{{property.numvisits}}</td>
+                <td>{{property.rating}}.7</td>
             </tr>
+        {% endfor %}
     </table>
 
     <select>
-        <option value = searchby>Search by...</option>
+         <option value = searchby>Search by...</option>
         <option value = name>Name</option>
         <option value = address>Address</option>
         <option value = city>City</option>
-        <option value = zip>Address</option>
-        <option value = size>Address</option>
-        <option value = type>Address</option>
-        <option value = public>Address</option>
+        <option value = zip>Zip</option>
+        <option value = size>Size</option>
+        <option value = type>Type</option>
+        <option value = public>Public</option>
         <option value = commerical>Commerical</option>
         <option value = id>ID</option>
         <option value = visits>Visits</option>
@@ -61,14 +64,12 @@
     <div class = "text-align: right">
         <a href="/" class="btn btn-primary">Search Properties</a>
     </div>
+
     <div style = "text-align:center">
-        <a href="/" class="btn btn-primary">View Property Details</a>
-    </div>
-    <div style = "text-align:center">
-        <a href="/" class="btn btn-primary">View Visit History</a>
+        <a href="/visitorhistory" class="btn btn-primary">View Visit History</a>
     </div>
     <div class = "text-left">
-        <a href="/" class="btn btn-primary">Log Out</a>
+        <a href="/logout" class="btn btn-primary">Log Out</a>
     </div>
 
 
