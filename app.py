@@ -317,29 +317,16 @@ def OwnerOverview():
 @app.route('/ConfirmedProperties')
 @is_logged_in
 def ConfirmedProperties():
-    return render_template('ConfirmedProperties.html')
-
-@app.route('/UnconfirmedProperties')
-@is_logged_in
-def UnconfirmedProperties():
-    return render_template('UnconfirmedProperties.html')
-
-@app.route('/SearchProperties', methods=['POST'])
-def SearchProperties():
-    column = request.form['column']
-    searchterm = request.form['searchterm']
-    confirmed = request.form['confirmed']
 
     # Create cursor
     cur = mysql.connection.cursor()
 
     # Execute for each type of column
-    if column == 'Name':
-        result = cur.execute("SELECT * FROM FarmItem WHERE Name = %s", [searchterm])
-    elif column == 'Type':
-        result = cur.execute("SELECT * FROM FarmItem WHERE Type = %s", [searchterm])
-    elif column == '':
-        result = cur.execute("SELECT * FROM FarmItem")
+    result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE ApprovedBy IS NOT NULL
+                            GROUP BY ID
+                            ORDER BY Name""")
 
     properties = cur.fetchall()
 
@@ -349,10 +336,69 @@ def SearchProperties():
     #Close connection
     cur.close()
 
+    return render_template('ConfirmedProperties.html', properties=properties)
 
-    return render_template() # for confirmed or unnconfirmed properties accordingly
+@app.route('/UnconfirmedProperties')
+@is_logged_in
+def UnconfirmedProperties():
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute for each type of column
+    result = cur.execute("SELECT * FROM Property WHERE ApprovedBy IS NULL ORDER BY Name")
+
+    properties = cur.fetchall()
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return render_template('UnconfirmedProperties.html', properties=properties)
+
+@app.route('/SearchProperties', methods=['POST'])
+def SearchProperties():
+    column = request.form['column']
+    searchterm = request.form['searchterm']
+    confirmed = bool(request.form['confirmed'])
+    if column in ['IsPublic', 'IsCommercial']:
+        if searchterm.lower() == 'yes':
+            searchterm = 1
+        else:
+            searchterm = 0
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute for each type of column
+    if confirmed:
+        if searchterm == '':
+            return redirect(url_for('ConfirmedProperties'))
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
+                                FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                WHERE ApprovedBy IS NOT NULL AND {} = %s
+                                GROUP BY ID
+                                ORDER BY Name""".format(column), [searchterm])
+    else:
+        if searchterm == '':
+            return redirect(url_for('UnconfirmedProperties'))
+        result = cur.execute("SELECT * FROM Property WHERE ApprovedBy IS NULL AND {} = {} ORDER BY Name".format(column, searchterm))
 
 
+    properties = cur.fetchall()
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    if confirmed:
+        return render_template('ConfirmedProperties.html', properties=properties)
+    else:
+        return render_template('UnconfirmedProperties.html', properties=properties)
 
 ################################################################################
 
@@ -363,7 +409,7 @@ def ApprovedItems():
     cur = mysql.connection.cursor()
 
     # Get articles
-    result = cur.execute("SELECT * FROM FarmItem WHERE IsApproved")
+    result = cur.execute("SELECT * FROM FarmItem WHERE IsApproved ORDER BY Name")
 
     items = cur.fetchall()
 
@@ -379,7 +425,7 @@ def PendingItems():
     cur = mysql.connection.cursor()
 
     # Get articles
-    result = cur.execute("SELECT * FROM FarmItem WHERE NOT IsApproved")
+    result = cur.execute("SELECT * FROM FarmItem WHERE NOT IsApproved ORDER BY Name")
 
     items = cur.fetchall()
 
@@ -447,13 +493,10 @@ def SearchItems():
     # Create cursor
     cur = mysql.connection.cursor()
 
-    # Execute
-    if column == 'Name':
-        result = cur.execute("SELECT * FROM FarmItem WHERE Name = %s", [searchterm])
-    elif column == 'Type':
-        result = cur.execute("SELECT * FROM FarmItem WHERE Type = %s", [searchterm])
-    elif column == '':
-        result = cur.execute("SELECT * FROM FarmItem")
+    if searchterm == '':
+        return redirect(url_for('ApprovedItems'))
+
+    result = cur.execute("SELECT * FROM FarmItem WHERE {} = %s ORDER BY Name".format(column), [searchterm])
 
     items = cur.fetchall()
 

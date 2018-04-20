@@ -2,13 +2,13 @@
 
 {% block body %}
     <h1>Unconfirmed Properties</h1>
-    <p>Click on a property to manage it</p>
+    <p>Click on a property to manage/approve it</p>
 
     <table class="table table-striped">
         <tr>
             <th>Name</th>
             <th>Owner</th>
-            <th>Address</th>
+            <th>Street</th>
             <th>City</th>
             <th>Zip</th>
             <th>Size</th>
@@ -17,37 +17,38 @@
             <th>Commercial</th>
             <th>ID</th>
         </tr>
-        <!-- we'll need a for loop to iterate through for each row of the table -->
+        {% for property in properties %}
             <tr>
-                <td><a href="/ManageProperty">East Lake Urban Farm</a></td>
-                <td>Owner1</td>
-                <td>2nd Avenue</td>
-                <td>Atlanta</td>
-                <td>30317</td>
-                <td>20</td>
-                <td>Farm</td>
-                <td>No</td>
-                <td>Yes</td>
-                <td>12345</td>
+                <td><a href="/ManageProperty">{{property.Name}}</a></td>
+                <td>{{property.Owner}}</td>
+                <td>{{property.Street}}</td>
+                <td>{{property.City}}</td>
+                <td>{{property.Zip}}</td>
+                <td>{{property.Size}}</td>
+                <td>{{property.PropertyType}}</td>
+                <td>{% if property.IsPublic == 1 %}Yes{% else %}No{% endif %}</td>
+                <td>{% if property.IsCommercial == 1 %}Yes{% else %}No{% endif %}</td>
+                <td>{{property.ID}}</td>
             </tr>
+        {% endfor %}
     </table>
 
     <div class="text-left">
         <form action="{{url_for('SearchProperties')}}" method="post">
             <input type="hidden" name="_method" value="Search">
-            <input type="hidden" name="confirmed" value=false>
+            <input type="hidden" name="confirmed" value=''>
             <select name="column">
                 <option value="">Search by</option>
-                <option value = name>Name</option>
-                <option value = owner>Owner</option>
-                <option value = address>Address</option>
-                <option value = city>City</option>
-                <option value = zip>Zip</option>
-                <option value = size>Size</option>
-                <option value = type>Type</option>
-                <option value = public>Public</option>
-                <option value = commerical>Commerical</option>
-                <option value = id>ID</option>
+                <option value = Name>Name</option>
+                <option value = Owner>Owner</option>
+                <option value = Address>Address</option>
+                <option value = City>City</option>
+                <option value = Zip>Zip</option>
+                <option value = Size>Size</option>
+                <option value = Type>Type</option>
+                <option value = IsPublic>Public</option>
+                <option value = IsCommercial>Commercial</option>
+                <option value = ID>ID</option>
             </select><br>
             <input type="text" name="searchterm"><br>
             <input type="submit" value="Search" class="btn btn-submit">
