@@ -32,8 +32,28 @@
             </tr>
     </table>
 
-    <!-- insert searching functionality -->
-    <a href="/" class="btn btn-primary">Search</a>
+    <div class="text-left">
+        <form action="{{url_for('SearchProperties')}}" method="post">
+            <input type="hidden" name="_method" value="Search">
+            <input type="hidden" name="confirmed" value=false>
+            <select name="column">
+                <option value="">Search by</option>
+                <option value = name>Name</option>
+                <option value = owner>Owner</option>
+                <option value = address>Address</option>
+                <option value = city>City</option>
+                <option value = zip>Zip</option>
+                <option value = size>Size</option>
+                <option value = type>Type</option>
+                <option value = public>Public</option>
+                <option value = commerical>Commerical</option>
+                <option value = id>ID</option>
+            </select><br>
+            <input type="text" name="searchterm"><br>
+            <input type="submit" value="Search" class="btn btn-submit">
+        </form>
+    </div>
+
     <div class="text-right">
         <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
     </div>

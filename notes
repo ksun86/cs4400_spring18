@@ -3,12 +3,23 @@ pages left to work on:
 
     Owner/VisitorOverview (Kai)
 
-    Approved/PendingItems (Josh)
     Confirmed/UnconfirmedProperties (Josh)
 
     Admin/OwnerManageProperty (Josh)
     VisitorHistory
     PropertyDetails
+
+done pages:
+    Owner Registration
+    Visitor Registration
+    Log in
+
+    Admin Functionality
+
+    Approved Items
+    Pending Items
+
+
 
 case conventions:
     htmls, method, and routes - PascalCase

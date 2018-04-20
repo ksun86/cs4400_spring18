@@ -23,10 +23,10 @@
         {% for property in properties %}
             <tr>
                 <td><a href="/PropertyDetails/{{property.propertyID}}">{{property.propertyName}}</a></td>
-                <td>{{property.address}}</td>
-                <td>{{property.city}}</td>
-                <td>{{property.zipCode}}</td>
-                <td>{{property.size}}</td>
+                <td>{{property.Street}}</td>
+                <td>{{property.City}}</td>
+                <td>{{property.Zip}}</td>
+                <td>{{property.Size}}</td>
                 <td>{{property.propertyType}}</td>
                 <td>{{property.isPublic}}</td>
                 <td>{{property.isCommercial}}</td>
@@ -34,7 +34,7 @@
                 <!-- DERIVED ATTRIBUTES: HAVE TO FIGURE THIS OUT -->
                 <td>{{property.isValid}}</td>
                 <td>{{property.numvisits}}</td>
-                <td>{{property.rating}}.7</td>
+                <td>{{property.rating}}</td>
             </tr>
         {% endfor %}
     </table>

@@ -85,7 +85,7 @@ def Logout():
 ################################################################################
 # User Registration Form Class
 class RegisterForm(Form):
-    username = StringField('Username', [validators.Length(min=4, max=25)])
+    username = StringField('Username', [validators.Length(min=3, max=25)])
     email = StringField('Email', [validators.Length(min=6, max=50)])
     password = PasswordField('Password', [
         validators.Length(min=8, max=50),
@@ -324,6 +324,36 @@ def ConfirmedProperties():
 def UnconfirmedProperties():
     return render_template('UnconfirmedProperties.html')
 
+@app.route('/SearchProperties', methods=['POST'])
+def SearchProperties():
+    column = request.form['column']
+    searchterm = request.form['searchterm']
+    confirmed = request.form['confirmed']
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute for each type of column
+    if column == 'Name':
+        result = cur.execute("SELECT * FROM FarmItem WHERE Name = %s", [searchterm])
+    elif column == 'Type':
+        result = cur.execute("SELECT * FROM FarmItem WHERE Type = %s", [searchterm])
+    elif column == '':
+        result = cur.execute("SELECT * FROM FarmItem")
+
+    properties = cur.fetchall()
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+
+    return render_template() # for confirmed or unnconfirmed properties accordingly
+
+
+
 ################################################################################
 
 @app.route('/ApprovedItems')
@@ -360,11 +390,14 @@ def PendingItems():
 
 @app.route('/AddItem', methods=['POST'])
 def AddItem():
+    itemType = request.form['type']
+    name = request.form['name']
+
     # Create cursor
     cur = mysql.connection.cursor()
 
     # Execute
-    cur.execute("DELETE FROM FarmItem WHERE Name = %s", [name])
+    cur.execute("INSERT INTO FarmItem(Name, IsApproved, Type) VALUES(%s, TRUE, %s)", [name, itemType])
 
     # Commit to DB
     mysql.connection.commit()
@@ -396,7 +429,7 @@ def ApproveItem(name):
     cur = mysql.connection.cursor()
 
     # Execute
-    cur.execute("DELETE FROM FarmItem WHERE Name = %s", [name])
+    cur.execute("UPDATE FarmItem SET IsApproved = TRUE WHERE Name = %s", [name])
 
     # Commit to DB
     mysql.connection.commit()
@@ -405,6 +438,32 @@ def ApproveItem(name):
     cur.close()
 
     return redirect(url_for('PendingItems'))
+
+@app.route('/SearchItems', methods=['POST'])
+def SearchItems():
+    column = request.form['column']
+    searchterm = request.form['searchterm']
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    if column == 'Name':
+        result = cur.execute("SELECT * FROM FarmItem WHERE Name = %s", [searchterm])
+    elif column == 'Type':
+        result = cur.execute("SELECT * FROM FarmItem WHERE Type = %s", [searchterm])
+    elif column == '':
+        result = cur.execute("SELECT * FROM FarmItem")
+
+    items = cur.fetchall()
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return render_template('ApprovedItems.html', items=items)
 
 ################################################################################
 
