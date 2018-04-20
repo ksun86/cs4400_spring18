@@ -207,12 +207,12 @@ def AddItems():
     orchardChoices = []
     gardenChoices = []
     for tup in data:
-        if tup['type'] == 'ANIMAL':
-            animalChoices.append(tup['name'])
-        elif tup['type'] == 'FRUIT' or tup['type'] == 'NUT':
-            orchardChoices.append(tup['name'])
-        elif tup['type'] == 'VEGETABLE' or tup['type'] == 'FLOWER':
-            gardenChoices.append(tup['name'])
+        if tup['Type'] == 'ANIMAL':
+            animalChoices.append(tup['Name'])
+        elif tup['Type'] == 'FRUIT' or tup['Type'] == 'NUT':
+            orchardChoices.append(tup['Name'])
+        elif tup['Type'] == 'VEGETABLE' or tup['Type'] == 'FLOWER':
+            gardenChoices.append(tup['Name'])
 
     if session['propertyType'] == 'FARM':
         form.animals.choices = [(animal,animal) for animal in animalChoices]
