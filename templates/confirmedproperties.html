@@ -7,6 +7,7 @@
     <table class="table table-striped">
         <tr>
             <th>Name</th>
+            <th>ID</th>
             <th>Street</th>
             <th>City</th>
             <th>Zip</th>
@@ -14,13 +15,13 @@
             <th>Type</th>
             <th>Public</th>
             <th>Commercial</th>
-            <th>ID</th>
             <th>Approved by</th>
             <th>Average Rating</th>
         </tr>
         {% for property in properties %}
             <tr>
-                <td><a href="/ManageProperty">{{property.Name}}</a></td>
+                <td><a href="/PropertyDetails/{{property.ID}}">{{property.Name}}</a></td>
+                <td>{{"%05d"|format(property.ID)}}</td>
                 <td>{{property.Street}}</td>
                 <td>{{property.City}}</td>
                 <td>{{property.Zip}}</td>
@@ -28,9 +29,8 @@
                 <td>{{property.PropertyType}}</td>
                 <td>{% if property.IsPublic == 1 %}Yes{% else %}No{% endif %}</td>
                 <td>{% if property.IsCommercial == 1 %}Yes{% else %}No{% endif %}</td>
-                <td>{{property.ID}}</td>
                 <td>{{property.ApprovedBy}}</td>
-                <td>{{property.AverageRating}}</td>
+                <td>{% if property.AverageRating %}{{"%.1f"|format(property.AverageRating)}}{% else %}{{property.AverageRating}}{% endif %}</td>
             </tr>
         {% endfor%}
     </table>
@@ -38,18 +38,18 @@
     <div class="text-left">
         <form action="{{url_for('SearchProperties')}}" method="post">
             <input type="hidden" name="_method" value="Search">
-            <input type="hidden" name="confirmed" value='true'>
+            <input type="hidden" name="searchType" value='ConfirmedProperties'>
             <select name="column">
                 <option value="">Search by</option>
                 <option value = Name>Name</option>
-                <option value = Address>Address</option>
+                <option value = ID>ID</option>
+                <option value = Street>Street</option>
                 <option value = City>City</option>
                 <option value = Zip>Zip</option>
                 <option value = Size>Size</option>
-                <option value = Type>Type</option>
+                <option value = PropertyType>Type</option>
                 <option value = IsPublic>Public</option>
                 <option value = IsCommercial>Commercial</option>
-                <option value = ID>ID</option>
                 <option value = ApprovedBy>Approved By</option>
                 <option value = AverageRating>Average Rating</option>
             </select><br>

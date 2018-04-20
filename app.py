@@ -16,7 +16,7 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
-propertyID = 0
+propertyID = 54132
 
 ################################################################################
 
@@ -40,8 +40,6 @@ def Login():
             userType = data['UserType']
 
             # Compare Passwords
-            print(type(password))
-            print(type(passwordCandidate))
             if sha256_crypt.verify(passwordCandidate, password):
                 # Passed
                 session['loggedIn'] = True
@@ -243,12 +241,21 @@ def AddItems():
 @app.route('/OwnerFunctionality')
 @is_logged_in
 def OwnerFunctionality():
-    return render_template('OwnerFunctionality.html')
+    # Create cursor
+    cur = mysql.connection.cursor()
 
-@app.route('/AdminFunctionality')
-@is_logged_in
-def AdminFunctionality():
-    return render_template('AdminFunctionality.html')
+    # Get properties
+    result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE Owner = %s
+                            GROUP BY ID
+                            ORDER BY Name""", [session['username']])
+    properties = cur.fetchall()
+
+    # Close connection
+    cur.close()
+
+    return render_template('OwnerFunctionality.html', properties=properties)
 
 @app.route('/VisitorFunctionality')
 @is_logged_in
@@ -256,9 +263,12 @@ def VisitorFunctionality():
     # Create cursor
     cur = mysql.connection.cursor()
 
-    # Get articles
-    result = cur.execute("SELECT * FROM Property WHERE NOT ApprovedBy = null") # approved by must have some value
-
+    # Get properties
+    result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE ApprovedBy IS NOT NULL AND IsPublic
+                            GROUP BY ID
+                            ORDER BY Name""")
     properties = cur.fetchall()
 
     # Close connection
@@ -266,14 +276,42 @@ def VisitorFunctionality():
 
     return render_template('VisitorFunctionality.html', properties=properties)
 
-################################################################################
-
-@app.route('/ManageProperty')
+@app.route('/OtherOwnersProperties')
 @is_logged_in
-def ManageProperty():
-    return render_template('ManageProperty.html')
+def OtherOwnersProperties():
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Get properties
+    result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE ApprovedBy IS NOT NULL AND IsPublic AND NOT Owner = %s
+                            GROUP BY ID
+                            ORDER BY Name""", [session['username']])
+
+    properties = cur.fetchall()
+
+    # Close connection
+    cur.close()
+
+    return render_template('OtherOwnersProperties.html', properties=properties)
 
 ################################################################################
+
+@app.route('/AdminFunctionality')
+@is_logged_in
+def AdminFunctionality():
+    return render_template('AdminFunctionality.html')
+
+@app.route('/OwnerManageProperty/<string:ID>')
+@is_logged_in
+def OwnerManageProperty(ID):
+    return render_template('OwnerManageProperty.html')
+
+@app.route('/AdminManageProperty/<string:ID>')
+@is_logged_in
+def AdminManageProperty(ID):
+    return render_template('AdminManageProperty.html')
 
 @app.route('/DeleteProperty/<string:ID>', methods=['POST'])
 @is_logged_in
@@ -296,11 +334,6 @@ def DeleteProperty(ID):
         return redirect(url_for('OwnerFunctionality'))
 
 ################################################################################
-
-@app.route('/OtherOwnersProperties')
-@is_logged_in
-def OtherOwnersProperties():
-    return render_template('OtherOwnersProperties.html')
 
 @app.route('/VisitorOverview')
 @is_logged_in
@@ -362,30 +395,49 @@ def UnconfirmedProperties():
 def SearchProperties():
     column = request.form['column']
     searchterm = request.form['searchterm']
-    confirmed = bool(request.form['confirmed'])
-    if column in ['IsPublic', 'IsCommercial']:
+    searchType = request.form['searchType']
+    if column in ['IsPublic', 'IsCommercial', 'IsApproved']:
         if searchterm.lower() == 'yes':
             searchterm = 1
         else:
             searchterm = 0
+    if searchterm == '' or column == '':
+        return redirect(url_for(searchType))
 
     # Create cursor
     cur = mysql.connection.cursor()
 
-    # Execute for each type of column
-    if confirmed:
-        if searchterm == '':
-            return redirect(url_for('ConfirmedProperties'))
+    # Execute for each type of search
+    if searchType == 'ConfirmedProperties':
         result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
                                 FROM Property LEFT JOIN Visit ON ID = PropertyID
                                 WHERE ApprovedBy IS NOT NULL AND {} = %s
                                 GROUP BY ID
                                 ORDER BY Name""".format(column), [searchterm])
-    else:
-        if searchterm == '':
-            return redirect(url_for('UnconfirmedProperties'))
-        result = cur.execute("SELECT * FROM Property WHERE ApprovedBy IS NULL AND {} = {} ORDER BY Name".format(column, searchterm))
 
+    elif searchType == 'UnconfirmedProperties':
+        result = cur.execute("SELECT * FROM Property WHERE ApprovedBy IS NULL AND {} = %s ORDER BY Name".format(column), [searchterm])
+
+    elif searchType == 'VisitorFunctionality':
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                                FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                WHERE ApprovedBy IS NOT NULL AND IsPublic AND {} = %s
+                                GROUP BY ID
+                                ORDER BY Name""".format(column), [searchterm])
+
+    elif searchType == 'OwnerFunctionality':
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                                FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                WHERE Owner = %s AND {} = %s
+                                GROUP BY ID
+                                ORDER BY Name""".format(column), [session['username'], searchterm])
+
+    elif searchType == 'OtherOwnersProperties':
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                                FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                WHERE ApprovedBy IS NOT NULL AND IsPublic AND NOT Owner = %s AND {} = %s
+                                GROUP BY ID
+                                ORDER BY Name""".format(column), [session['username'], searchterm])
 
     properties = cur.fetchall()
 
@@ -395,10 +447,7 @@ def SearchProperties():
     #Close connection
     cur.close()
 
-    if confirmed:
-        return render_template('ConfirmedProperties.html', properties=properties)
-    else:
-        return render_template('UnconfirmedProperties.html', properties=properties)
+    return render_template('{}.html'.format(searchType), properties=properties)
 
 ################################################################################
 
@@ -496,7 +545,7 @@ def SearchItems():
     if searchterm == '':
         return redirect(url_for('ApprovedItems'))
 
-    result = cur.execute("SELECT * FROM FarmItem WHERE {} = %s ORDER BY Name".format(column), [searchterm])
+    result = cur.execute("SELECT * FROM FarmItem WHERE {} = {} ORDER BY Name".format(column, searchterm))
 
     items = cur.fetchall()
 
@@ -517,11 +566,33 @@ def PropertyDetails(ID):
     cur = mysql.connection.cursor()
 
     # Get article
-    result = cur.execute("SELECT * FROM Property WHERE ID = %s", [ID])
+    result = cur.execute("""SELECT Name, Owner, Email, Street, City, Zip, Size, COUNT(Rating) AS NumVisits, AVG(Rating) AS AverageRating, PropertyType, IsPublic, IsCommercial, ID
+                            FROM Property
+                            JOIN User On Owner = User.Username
+                            LEFT JOIN Visit ON Visit.PropertyID = ID
+                            WHERE ID = %s
+                            GROUP BY ID
+                            ORDER BY Property.Name""", [ID])
 
     prop = cur.fetchone()
 
-    return render_template('PropertyDetails.html', property=prop)
+    result = cur.execute("""SELECT ItemName, Type
+                            FROM Has Join Property ON Has.PropertyID = ID
+                            JOIN FarmItem ON ItemName = FarmItem.Name
+                            WHERE ID = %s""", [ID])
+    items = cur.fetchall()
+    crops = []
+    animals = []
+    for item in items:
+        if item['Type'] == 'ANIMAL':
+            animals.append(item['ItemName'])
+        else:
+            crops.append(item['ItemName'])
+
+    animals = ', '.join(animals)
+    crops = ', '.join(crops)
+
+    return render_template('PropertyDetails.html', property=prop, animals=animals, crops=crops)#, items=items)
 
 @app.route('/VisitorHistory')
 @is_logged_in
@@ -533,3 +604,17 @@ def VisitorHistory():
 if __name__ == '__main__':
     app.secret_key='secret123'
     app.run(debug=True)
+
+
+# SELECT Property.Name, User.Username, Email, Street, City, Zip, Size, COUNT(Rating) AS NumVisits, AVG(Rating) AS AverageRating, PropertyType, IsPublic, IsCommercial, ID, FarmItem.Name
+# FROM Property
+# JOIN User On Owner = User.Username
+# LEFT JOIN Visit ON Visit.PropertyID = ID
+# LEFT JOIN Has ON Has.PropertyID = ID
+# JOIN FarmItem ON ItemName = FarmItem.Name
+# GROUP BY ID
+# ORDER BY Property.Name
+
+# Select Property.Name, FarmItem.Name
+# from Has Join Property ON Has.PropertyID = ID
+# JOIN FarmItem ON ItemName = FarmItem.Name

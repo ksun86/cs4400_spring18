@@ -2,20 +2,21 @@
 
 {% block body %}
     <h1>Your Visitor History</h1>
-    <p>Click on a property to view its details</p>
 
     <table class="table table-striped">
+    <p>Click on a property to view its details/unlog a visit</p>
         <tr>
             <th>Name</th>
             <th>Date Logged</th>
             <th>Your Rating</th>
         </tr>
-        <!-- we'll need a for loop to iterate through for each row of the table -->
+        {% for visit in visits %}
             <tr>
-                <td><a href="/propertydetails">GT Garden</a></td>
+                <td><a href="/PropertyDetails/{{visit.propertyID}}">GT Garden</a></td>
                 <td>2018-01-21</td>
                 <td>5</td>
             </tr>
+        {% endfor %}
     </table>
 
     <a href="/VisitorFunctionality" class="btn btn-primary">Back</a>
