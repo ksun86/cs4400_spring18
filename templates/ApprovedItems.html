@@ -2,25 +2,18 @@
 
 {% block body %}
 
-    <h1>Items Pending Approval</h1>
+    <h1>Approved Items</h1>
 
     <table class="table table-striped">
         <tr>
             <th>Name</th>
             <th>Type</th>
             <th></th>
-            <th></th>
         </tr>
         {% for item in items %}
             <tr>
                 <td>{{item.Name}}</td>
                 <td>{{item.Type}}</td>
-                <td>
-                    <form action="{{url_for('ApproveItem', name=item.Name)}}" method="post">
-                        <input type="hidden" name="_method" value="APPROVE">
-                        <input type="submit" value="Approve" class="btn btn-default">
-                    </form>
-                </td>
                 <td>
                     <form action="{{url_for('DeleteItem', name=item.Name)}}" method="post">
                         <input type="hidden" name="_method" value="DELETE">
@@ -31,9 +24,20 @@
         {% endfor%}
     </table>
 
+    <!-- insert searching functionality -->
+    <a href="/" class="btn btn-default">Search</a>
 
-<div class="text-right">
-    <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
-</div>
+    <!-- insert adding item functionality -->
+    <form action="{{url_for('AddItem')}}" method="post">
+        <input type="hidden" name="_method" value="ADD">
+        <input type="">
+        <input type="">
+        <input type="submit" value="Add Item" class="btn btn-submit">
+    </form>
+
+
+    <div class="text-right">
+        <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
+    </div>
 
 {% endblock %}

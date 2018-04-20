@@ -36,10 +36,12 @@ def Login():
         if result > 0:
             # Get stored hash
             data = cur.fetchone()
-            password = data['password']
-            userType = data['userType']
+            password = data['Password']
+            userType = data['UserType']
 
             # Compare Passwords
+            print(type(password))
+            print(type(passwordCandidate))
             if sha256_crypt.verify(passwordCandidate, password):
                 # Passed
                 session['loggedIn'] = True
@@ -94,7 +96,7 @@ class RegisterForm(Form):
 
 ################################################################################
 # User Registration
-@app.route('/Registration/<string:utype>', methods=['GET', 'POST'])
+@app.route('/UserRegistration/<string:userType>', methods=['GET', 'POST'])
 def Register(userType):
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
@@ -125,7 +127,7 @@ def Register(userType):
             return redirect(url_for('VisitorFunctionality'))
         elif userType == 'OWNER':
             return redirect(url_for('AddProperty'))
-    return render_template('Registration.html', form=form)
+    return render_template('UserRegistration.html', form=form)
 
 ################################################################################
 # Add Property Form Class
@@ -168,7 +170,7 @@ def AddProperty():
         cur = mysql.connection.cursor()
 
         # Execute query
-        cur.execute("INSERT INTO property(ID, Name, Size, IsCommercial, IsPublic, Street, city, zip, PropertyType, Owner) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+        cur.execute("INSERT INTO Property(ID, Name, Size, IsCommercial, IsPublic, Street, City, Zip, PropertyType, Owner) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (propertyID, propertyName, size, isCommercial, isPublic, address, city, zipCode, propertyType, session['username']))
 
         # Commit to DB
@@ -273,6 +275,28 @@ def ManageProperty():
 
 ################################################################################
 
+@app.route('/DeleteProperty/<string:ID>', methods=['POST'])
+@is_logged_in
+def DeleteProperty(ID):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM Property WHERE ID = %s", [ID])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    if session['userType'] == 'ADMIN':
+        return redirect(url_for('AdminFunctionality'))
+    elif session['userType'] == 'OWNER':
+        return redirect(url_for('OwnerFunctionality'))
+
+################################################################################
+
 @app.route('/OtherOwnersProperties')
 @is_logged_in
 def OtherOwnersProperties():
@@ -305,19 +329,97 @@ def UnconfirmedProperties():
 @app.route('/ApprovedItems')
 @is_logged_in
 def ApprovedItems():
-    return render_template('ApprovedItems.html')
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Get articles
+    result = cur.execute("SELECT * FROM FarmItem WHERE IsApproved")
+
+    items = cur.fetchall()
+
+    # Close connection
+    cur.close()
+
+    return render_template('ApprovedItems.html', items=items)
 
 @app.route('/PendingItems')
 @is_logged_in
 def PendingItems():
-    return render_template('PendingItems.html')
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Get articles
+    result = cur.execute("SELECT * FROM FarmItem WHERE NOT IsApproved")
+
+    items = cur.fetchall()
+
+    # Close connection
+    cur.close()
+
+    return render_template('PendingItems.html', items=items)
+
+@app.route('/AddItem', methods=['POST'])
+def AddItem():
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM FarmItem WHERE Name = %s", [name])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('ApprovedItems'))
+
+@app.route('/DeleteItem/<string:name>', methods=['POST'])
+def DeleteItem(name):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM FarmItem WHERE Name = %s", [name])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('ApprovedItems'))
+
+@app.route('/ApproveItem/<string:name>', methods=['POST'])
+def ApproveItem(name):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM FarmItem WHERE Name = %s", [name])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('PendingItems'))
 
 ################################################################################
 
-@app.route('/PropertyDetails')
+@app.route('/PropertyDetails/<string:ID>/')
 @is_logged_in
-def PropertyDetails():
-    return render_template('PropertyDetails.html')
+def PropertyDetails(ID):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Get article
+    result = cur.execute("SELECT * FROM Property WHERE ID = %s", [ID])
+
+    prop = cur.fetchone()
+
+    return render_template('PropertyDetails.html', property=prop)
 
 @app.route('/VisitorHistory')
 @is_logged_in

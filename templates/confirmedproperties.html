@@ -19,7 +19,7 @@
             <th>Verified by</th>
             <th>Average Rating</th>
         </tr>
-        <!-- we'll need a for loop to iterate through for each row of the table -->
+        {% for item in items %}
             <tr>
                 <td><a href="/manageproperty">East Lake Urban Farm</a></td>
                 <td>Owner1</td>
@@ -34,24 +34,13 @@
                 <td>admin1</td>
                 <td>5.0</td>
             </tr>
-            <tr>
-                <td><a href="/ManageProperty">Cooper Middle School</a></td>
-                <td>CooperMiddleSchool</td>
-                <td>4605 Ewing Rd</td>
-                <td>Austell</td>
-                <td>30106</td>
-                <td>1</td>
-                <td>Garden</td>
-                <td>Yes</td>
-                <td>No</td>
-                <td>12000</td>
-                <td>admin2</td>
-                <td>4.9</td>
-            </tr>
+        {% endfor%}
     </table>
 
     <!-- insert searching functionality -->
     <a href="/" class="btn btn-primary">Search</a>
+
+
     <div class="text-right">
         <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
     </div>

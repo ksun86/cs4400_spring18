@@ -2,15 +2,15 @@
 
 {% block body %}
     <div class="text-center">
-        <h1>Welcome Admin Name</h1>
+        <h1>Welcome {{session.username}}</h1>
         <h3>What would you like to do?</h3>
 
         <a href="/VisitorOverview" class="btn btn-primary">View Visitors List</a><br>
         <a href="/OwnerOverview" class="btn btn-primary">View Owners List</a><br>
         <a href="/ConfirmedProperties" class="btn btn-primary">View Confirmed Properties</a><br>
         <a href="/UnconfirmedProperties" class="btn btn-primary">View Unconfirmed Properties</a><br>
-        <a href="/ApprovedCrops" class="btn btn-primary">View Approved Animals and Crops</a><br>
-        <a href="/PendingCrops" class="btn btn-primary">View Pending Animals and Crops</a><br>
+        <a href="/ApprovedItems" class="btn btn-primary">View Approved Items</a><br>
+        <a href="/PendingItems" class="btn btn-primary">View Pending Items</a><br>
         <a href="/Logout" class="btn btn-primary">Log Out</a>
 
     </div>
