@@ -1,10 +1,10 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-    <h1>Welcome {{session.username}}</h1>
+    <h1>Confirmed Properties</h1>
+    <p>Click on a property to manage it</p>
 
     <table class="table table-striped">
-    <p>Click on a property to manage it</p>
         <tr>
             <th>Name</th>
             <th>ID</th>
@@ -15,13 +15,12 @@
             <th>Type</th>
             <th>Public</th>
             <th>Commercial</th>
-            <th>Approved</th>
-            <th>Number of Visits</th>
+            <th>Approved by</th>
             <th>Average Rating</th>
         </tr>
         {% for property in properties %}
             <tr>
-                <td><a href="/ManageProperty/{{property.ID}}/o">{{property.Name}}</a></td>
+                <td><a href="/ManageProperty/{{property.ID}}/c">{{property.Name}}</a></td>
                 <td>{{"%05d"|format(property.ID)}}</td>
                 <td>{{property.Street}}</td>
                 <td>{{property.City}}</td>
@@ -30,17 +29,16 @@
                 <td>{{property.PropertyType}}</td>
                 <td>{% if property.IsPublic == 1 %}Yes{% else %}No{% endif %}</td>
                 <td>{% if property.IsCommercial == 1 %}Yes{% else %}No{% endif %}</td>
-                <td>{% if ApprovedBy %}Yes{% else %}No{% endif %}</td>
-                <td>{{property.NumVisits}}</td>
+                <td>{{property.ApprovedBy}}</td>
                 <td>{% if property.AverageRating %}{{"%.1f"|format(property.AverageRating)}}{% else %}{{property.AverageRating}}{% endif %}</td>
             </tr>
-        {% endfor %}
+        {% endfor%}
     </table>
 
     <div class="text-left">
         <form action="{{url_for('SearchProperties')}}" method="post">
             <input type="hidden" name="_method" value="Search">
-            <input type="hidden" name="searchType" value='OwnerFunctionality'>
+            <input type="hidden" name="searchType" value='ConfirmedProperties'>
             <select name="column">
                 <option value="">Search by</option>
                 <option value = Name>Name</option>
@@ -53,7 +51,6 @@
                 <option value = IsPublic>Public</option>
                 <option value = IsCommercial>Commercial</option>
                 <option value = ApprovedBy>Approved By</option>
-                <option value = NumVisits>Number of Visits</option>
                 <option value = Rating>Average Rating</option>
             </select><br>
             <input type="text" name="searchterm"><br>
@@ -61,12 +58,22 @@
         </form>
     </div>
 
-    <div class="text-center">
-        <a href="/AddProperty" class="btn btn-primary">Add Property</a>
-        <a href="/OtherOwnersProperties" class="btn btn-primary">View Other Owners' Properties</a>
+    <div class="text-right">
+        <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
     </div>
-    <div class="text-right"> <!--LOG OUT WRONG PLACE-->
-        <a href="/Logout" class="btn btn-primary">Log Out</a>
+    <div class="text-left">
+        <form action="{{url_for('SortBy')}}" method="post">
+            <input type="hidden" name="sortType" value="ConfirmedProperties">
+            <select name="column">
+                <option value="">Sort by</option>
+                <option value = Name>Name</option>       
+                <option value = Zip>Zip</option>     
+                <option value = PropertyType>Type</option>
+                <option value = ApprovedBy>Approved By</option>
+                <option value = AverageRating>Average Rating</option>
+            </select><br>
+            <input type="submit" value="Sort" class="btn btn-submit">
+        </form>
     </div>
 
 {% endblock %}
