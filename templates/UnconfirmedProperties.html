@@ -1,13 +1,14 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-    <h1>Welcome {{session.username}}</h1>
+    <h1>Unconfirmed Properties</h1>
+    <p>Click on a property to manage/approve it</p>
 
     <table class="table table-striped">
-    <p>Click on a property to manage it</p>
         <tr>
             <th>Name</th>
             <th>ID</th>
+            <th>Owner</th>
             <th>Street</th>
             <th>City</th>
             <th>Zip</th>
@@ -15,14 +16,12 @@
             <th>Type</th>
             <th>Public</th>
             <th>Commercial</th>
-            <th>Approved</th>
-            <th>Number of Visits</th>
-            <th>Average Rating</th>
         </tr>
         {% for property in properties %}
             <tr>
-                <td><a href="/OwnerManageProperty/{{property.ID}}">{{property.Name}}</a></td>
+                <td><a href="/ManageProperty/{{property.ID}}/u">{{property.Name}}</a></td>
                 <td>{{"%05d"|format(property.ID)}}</td>
+                <td>{{property.Owner}}</td>
                 <td>{{property.Street}}</td>
                 <td>{{property.City}}</td>
                 <td>{{property.Zip}}</td>
@@ -30,9 +29,6 @@
                 <td>{{property.PropertyType}}</td>
                 <td>{% if property.IsPublic == 1 %}Yes{% else %}No{% endif %}</td>
                 <td>{% if property.IsCommercial == 1 %}Yes{% else %}No{% endif %}</td>
-                <td>{% if ApprovedBy %}Yes{% else %}No{% endif %}</td>
-                <td>{{property.NumVisits}}</td>
-                <td>{% if property.AverageRating %}{{"%.1f"|format(property.AverageRating)}}{% else %}{{property.AverageRating}}{% endif %}</td>
             </tr>
         {% endfor %}
     </table>
@@ -40,11 +36,12 @@
     <div class="text-left">
         <form action="{{url_for('SearchProperties')}}" method="post">
             <input type="hidden" name="_method" value="Search">
-            <input type="hidden" name="searchType" value='OwnerFunctionality'>
+            <input type="hidden" name="searchType" value='UnconfirmedProperties'>
             <select name="column">
                 <option value="">Search by</option>
                 <option value = Name>Name</option>
                 <option value = ID>ID</option>
+                <option value = Owner>Owner</option>
                 <option value = Street>Street</option>
                 <option value = City>City</option>
                 <option value = Zip>Zip</option>
@@ -52,21 +49,27 @@
                 <option value = PropertyType>Type</option>
                 <option value = IsPublic>Public</option>
                 <option value = IsCommercial>Commercial</option>
-                <option value = ApprovedBy>Approved By</option>
-                <option value = NumVisits>Number of Visits: Specify a range with "-" like 3-5</option>
-                <option value = AverageRating>Average Rating: Specify a range with "-" like 1-4</option>
             </select><br>
             <input type="text" name="searchterm"><br>
             <input type="submit" value="Search" class="btn btn-submit">
         </form>
     </div>
 
-    <div class="text-center">
-        <a href="/AddProperty" class="btn btn-primary">Add Property</a>
-        <a href="/OtherOwnersProperties" class="btn btn-primary">View Other Owners' Properties</a>
+    <div class="text-right">
+        <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
     </div>
-    <div class="text-right"> <!--LOG OUT WRONG PLACE-->
-        <a href="/Logout" class="btn btn-primary">Log Out</a>
+
+    <div class="text-left">
+        <form action="{{url_for('SortBy')}}" method="post">
+            <input type="hidden" name="sortType" value="UnconfirmedProperties">
+            <select name="column">
+                <option value="">Sort by</option>
+                <option value = Name>Name</option>       
+                <option value = Size>Size</option>     
+                <option value = Owner>Owner</option>
+            </select><br>
+            <input type="submit" value="Sort" class="btn btn-submit">
+        </form>
     </div>
 
 {% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+    <h1>Manage Items for {{session.propertyName}}</h1>
+
+    <table class="table table-striped">
+        <tr>
+            <th>Name</th>
+            <th></th>
+        </tr>
+        {% for item in items %}
+            <tr>
+                <td>{{item.ItemName}}</td>
+                <td>
+                    <form action="{{url_for('RemoveItem', name=item.ItemName)}}" method="post">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <input type="submit" value="Remove" class="btn btn-danger">
+                    </form>
+                </td>
+            </tr>
+        {% endfor%}
+    </table>
+
+    <div class="text-left">
+        <form action="{{url_for('AddItemProp')}}" method="post">
+          <p>Add item to your property</p>
+            <input type="hidden" name="_method" value="ADD">
+            <select name="item">
+              <option value="">Select Item Type</option>
+              {% for opt in available %}
+                <option>{{opt}}</option>
+              {% endfor %}
+            </select><br>
+            <input type="submit" value="Add Item" class="btn btn-submit">
+        </form>
+    </div>
+
+    {% if session.userType == 'OWNER' %}
+      <div class="text-center">
+        <p>Request approval for new item</p>
+          <form action="{{url_for('AddItem')}}" method="post">
+              <input type="hidden" name="_method" value="Request">
+              <input type="hidden" name="approved" value="">
+              <select name="type">
+                  <option value="">Select Item Type</option>
+                  <option value="ANIMAL">Animal</option>
+                  <option value="FRUIT">Fruit</option>
+                  <option value="NUT">Nut</option>
+                  <option value="VEGETABLE">Vegetable</option>
+                  <option value="FLOWER">Flower</option>
+              </select><br>
+              <input type="text" name="name"><br>
+              <input type="submit" value="Submit Request" class="btn btn-submit">
+          </form>
+      </div>
+    {% endif %}
+
+
+    <div class="text-right">
+        <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
+    </div>
+
+{% endblock %}

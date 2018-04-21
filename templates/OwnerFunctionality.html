@@ -3,9 +3,8 @@
 {% block body %}
     <h1>Welcome {{session.username}}</h1>
 
-
     <table class="table table-striped">
-    <p>Click on a property to view its details/log a visit</p>
+    <p>Click on a property to manage it</p>
         <tr>
             <th>Name</th>
             <th>ID</th>
@@ -16,12 +15,13 @@
             <th>Type</th>
             <th>Public</th>
             <th>Commercial</th>
+            <th>Approved</th>
             <th>Number of Visits</th>
             <th>Average Rating</th>
         </tr>
         {% for property in properties %}
             <tr>
-                <td><a href="/PropertyDetails/{{property.ID}}">{{property.Name}}</a></td>
+                <td><a href="/ManageProperty/{{property.ID}}/o">{{property.Name}}</a></td>
                 <td>{{"%05d"|format(property.ID)}}</td>
                 <td>{{property.Street}}</td>
                 <td>{{property.City}}</td>
@@ -30,6 +30,7 @@
                 <td>{{property.PropertyType}}</td>
                 <td>{% if property.IsPublic == 1 %}Yes{% else %}No{% endif %}</td>
                 <td>{% if property.IsCommercial == 1 %}Yes{% else %}No{% endif %}</td>
+                <td>{% if ApprovedBy %}Yes{% else %}No{% endif %}</td>
                 <td>{{property.NumVisits}}</td>
                 <td>{% if property.AverageRating %}{{"%.1f"|format(property.AverageRating)}}{% else %}{{property.AverageRating}}{% endif %}</td>
             </tr>
@@ -39,7 +40,7 @@
     <div class="text-left">
         <form action="{{url_for('SearchProperties')}}" method="post">
             <input type="hidden" name="_method" value="Search">
-            <input type="hidden" name="searchType" value='VisitorFunctionality'>
+            <input type="hidden" name="searchType" value='OwnerFunctionality'>
             <select name="column">
                 <option value="">Search by</option>
                 <option value = Name>Name</option>
@@ -51,20 +52,42 @@
                 <option value = PropertyType>Type</option>
                 <option value = IsPublic>Public</option>
                 <option value = IsCommercial>Commercial</option>
+                <option value = ApprovedBy>Approved By</option>
+<<<<<<< HEAD:templates/ownerfunctionality.html
                 <option value = NumVisits>Number of Visits: Specify a range with "-" like 3-5</option>
                 <option value = AverageRating>Average Rating: Specify a range with "-" like 1-4</option>
+=======
+                <option value = NumVisits>Number of Visits</option>
+                <option value = Rating>Average Rating</option>
+>>>>>>> 596245d46668561ca19f1239da38fba20b403992:templates/OwnerFunctionality.html
             </select><br>
             <input type="text" name="searchterm"><br>
             <input type="submit" value="Search" class="btn btn-submit">
         </form>
     </div>
 
-    <div class="text-center">
-        <a href="/VisitorHistory" class="btn btn-primary">View Visit History</a>
-    </div>
-    <div class="text-right">
-        <a href="/Logout" class="btn btn-primary">Log Out</a>
+    <div class="text-left">
+        <a href="/AddProperty" class="btn btn-primary">Add Property</a>
+        <a href="/OtherOwnersProperties" class="btn btn-primary">View Other Owners' Properties</a>
     </div>
 
+    <div class="text-left">
+        <form action="{{url_for('SortBy')}}" method="post">
+            <input type="hidden" name="sortType" value="OwnerFunctionality">
+            <select name="column">
+                <option value="">Sort by</option>
+                <option value = Name>Name</option>
+                <option value = City>City</option>
+                <option value = PropertyType>Type</option>
+                <option value = NumVisits>Number of Visits</option>
+                <option value = AverageRating>Average Rating</option>
+            </select><br>
+            <input type="submit" value="Sort" class="btn btn-submit">
+        </form>
+    </div>
+
+    <div class="text-right"> <!--LOG OUT WRONG PLACE-->
+        <a href="/Logout" class="btn btn-primary">Log Out</a>
+    </div>
 
 {% endblock %}

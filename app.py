@@ -1,6 +1,6 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
 from flask_mysqldb import MySQL
-from wtforms import Form, StringField, TextAreaField, PasswordField, SelectField, BooleanField, IntegerField, SelectMultipleField, validators
+from wtforms import Form, StringField, TextAreaField, PasswordField, SelectField, BooleanField, IntegerField, FloatField, SelectMultipleField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
 import enum
@@ -131,10 +131,10 @@ def Register(userType):
 # Add Property Form Class
 class AddPropertyForm(Form):
     propertyName = StringField('Property Name', [validators.Length(min=1, max=100)])
-    address = StringField('Address', [validators.Length(min=1, max=50)])
+    street = StringField('Street', [validators.Length(min=1, max=50)])
     city = StringField('City', [validators.Length(min=1, max=50)])
     zipCode = IntegerField('Zip Code', [validators.NumberRange(min=10000, max=99999)])
-    size = IntegerField('Size (in acres)', [validators.NumberRange(min=1, max=10000)])
+    size = FloatField('Size (in acres)', [validators.NumberRange(min=0.000001, max=10000)])
     propertyType = SelectField('Property Type',
         [validators.NoneOf('', message='Please select a property type')],
         choices=[('', ''), ('FARM', 'Farm'), ('GARDEN', 'Garden'), ('ORCHARD', 'Orchard')] # (value passed to db, value shown to user)
@@ -151,7 +151,7 @@ def AddProperty():
     if request.method == 'POST' and form.validate():
 
         propertyName = form.propertyName.data
-        address = form.address.data
+        street = form.street.data
         city = form.city.data
         zipCode = form.zipCode.data
         size = form.size.data
@@ -257,6 +257,9 @@ def OwnerFunctionality():
 
     return render_template('OwnerFunctionality.html', properties=properties)
 
+#################################################################################
+
+
 @app.route('/VisitorFunctionality')
 @is_logged_in
 def VisitorFunctionality():
@@ -303,15 +306,111 @@ def OtherOwnersProperties():
 def AdminFunctionality():
     return render_template('AdminFunctionality.html')
 
-@app.route('/OwnerManageProperty/<string:ID>')
+@app.route('/ManageProperty/<string:ID>/<string:manageType>', methods=['GET','POST'])
 @is_logged_in
-def OwnerManageProperty(ID):
-    return render_template('OwnerManageProperty.html')
+def ManageProperty(ID, manageType):
+    # Create cursor
+    cur = mysql.connection.cursor()
 
-@app.route('/AdminManageProperty/<string:ID>')
+
+
+    # Get property
+    result = cur.execute("SELECT * FROM Property WHERE ID = %s", [ID])
+
+    prop = cur.fetchone()
+
+    cur.close()
+
+    # Get form
+    form = AddPropertyForm(request.form)
+
+    # Populate property form fields
+    form.propertyName.data = prop['Name']
+    form.street.data = prop['Street']
+    form.city.data = prop['City']
+    form.zipCode.data = prop['Zip']
+    form.size.data = prop['Size']
+    form.propertyType.data = prop['PropertyType']
+    form.isPublic.data = prop['IsPublic']
+    form.isCommercial.data = prop['IsCommercial']
+    session['propertyID'] = ID
+    session['propertyType'] = prop['PropertyType']
+    session['propertyName'] = prop['Name']
+
+    if request.method == 'POST' and form.validate():
+        propertyName = request.form['propertyName']
+        street = request.form['street']
+        city = request.form['city']
+        zipCode = request.form['zipCode']
+        size = request.form['size']
+        try:
+            request.form['isPublic']
+            isPublic = True
+        except:
+            isPublic = False
+        try:
+            request.form['isCommercial']
+            isCommercial = True
+        except:
+            isCommercial = False
+
+
+        # Create Cursor
+        cur = mysql.connection.cursor()
+
+
+        if session['userType'] == 'OWNER':
+            # Execute
+            cur.execute ("""UPDATE Property SET Name=%s, Street=%s, City=%s, Zip=%s, Size=%s, IsPublic=%s, IsCommercial=%s, ApprovedBy=NULL
+                            WHERE ID=%s""",(propertyName, street, city, zipCode, size, isPublic, isCommercial, ID))
+        elif session['userType'] == 'ADMIN':
+            # Execute
+            cur.execute ("""UPDATE Property SET Name=%s, Street=%s, City=%s, Zip=%s, Size=%s, IsPublic=%s, IsCommercial=%s, ApprovedBy=%s
+                            WHERE ID=%s""",(propertyName, street, city, zipCode, size, isPublic, isCommercial, session['username'], ID))
+
+        # Commit to DB
+        mysql.connection.commit()
+
+        #Close connection
+        cur.close()
+
+        return redirect(url_for('ManageProperty', ID=ID, manageType=manageType))
+
+    return render_template('ManageProperty.html', form=form, property=prop)
+
+@app.route('/ManageItems', methods=['GET', 'POST'])
 @is_logged_in
-def AdminManageProperty(ID):
-    return render_template('AdminManageProperty.html')
+def ManageItems():
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    result = cur.execute("""SELECT ItemName FROM Has WHERE PropertyID = %s""", [session['propertyID']])
+    items = cur.fetchall()
+
+    result = cur.execute("SELECT Name, Type FROM FarmItem WHERE IsApproved AND Name NOT IN (SELECT ItemName FROM Has WHERE PropertyID = %s)", [session['propertyID']])
+    allAvailable = cur.fetchall()
+
+    animalChoices = []
+    orchardChoices = []
+    gardenChoices = []
+    for tup in allAvailable:
+        if tup['Type'] == 'ANIMAL':
+            animalChoices.append(tup['Name'])
+        elif tup['Type'] == 'FRUIT' or tup['Type'] == 'NUT':
+            orchardChoices.append(tup['Name'])
+        elif tup['Type'] == 'VEGETABLE' or tup['Type'] == 'FLOWER':
+            gardenChoices.append(tup['Name'])
+
+    if session['propertyType'] == 'FARM':
+        available = [item for item in animalChoices + gardenChoices + orchardChoices]
+    elif session['propertyType'] == 'GARDEN':
+        available = [item for item in gardenChoices]
+    elif session['propertyType'] == 'ORCHARD':
+        available = [item for item in orchardChoices]
+
+    cur.close()
+
+    return render_template('ManageItems.html', items=items, available=available)
 
 @app.route('/DeleteProperty/<string:ID>', methods=['POST'])
 @is_logged_in
@@ -328,22 +427,272 @@ def DeleteProperty(ID):
     #Close connection
     cur.close()
 
-    if session['userType'] == 'ADMIN':
+    if session['UserType'] == 'ADMIN':
         return redirect(url_for('AdminFunctionality'))
-    elif session['userType'] == 'OWNER':
+    elif session['UserType'] == 'OWNER':
         return redirect(url_for('OwnerFunctionality'))
+
+@app.route('/RemoveItem/<string:name>', methods=['POST'])
+@is_logged_in
+def RemoveItem(name):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM Has WHERE PropertyID = %s AND ItemName=%s", [session['propertyID'], name])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('ManageItems'))
+
+@app.route('/AddItemProp', methods=['POST'])
+@is_logged_in
+def AddItemProp():
+    item = request.form['item']
+    if item == "":
+        return redirect(url_for('ManageItems'))
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("INSERT INTO Has(PropertyID, ItemName) VALUES(%s, %s)", [session['propertyID'], item])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('ManageItems'))
 
 ################################################################################
 
 @app.route('/VisitorOverview')
 @is_logged_in
 def VisitorOverview():
-    return render_template('VisitorOverview.html')
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Get articles
+    result = cur.execute("SELECT Visit.Username, Email, COUNT(*) as LogVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username") 
+
+    visitors = cur.fetchall()
+
+    # Close connection
+    cur.close()
+
+    return render_template('VisitorOverview.html', users=visitors)
+
+@app.route('/DeleteVisitorAccount/<string:username>', methods=['POST'])
+@is_logged_in
+def DeleteVisitorAccount(username):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM User WHERE Username = %s", [username])
+    cur.execute("DELETE FROM Visit WHERE Username = %s", [username])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('VisitorOverview'))
+
+@app.route('/DeleteLogHistory/<string:username>', methods=['POST'])
+@is_logged_in
+def DeleteLogHistory(username):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM Visit WHERE Username = %s", [username])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('VisitorOverview'))
+
+@app.route('/SearchUsers', methods=['POST'])
+@is_logged_in
+def SearchUsers():
+    column = request.form['column']
+    searchterm = request.form['searchterm']
+    searchType = request.form['searchType']
+    if searchterm == '' or column == '':
+        return redirect(url_for(searchType))
+
+    cur = mysql.connection.cursor()
+
+    if searchType == "VisitorOverview":
+        result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
+                                FROM Visit JOIN User ON User.Username = Visit.Username
+                                WHERE UserType = 'VISITOR' AND User.{} = %s 
+                                GROUP BY Visit.Username
+                                """.format(column), [searchterm])
+    elif searchType == "OwnerOverview":
+        result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumProp
+                                FROM Property JOIN User ON User.Username = Property.Owner
+                                WHERE UserType = 'OWNER' AND User.{} = %s
+                                GROUP BY Property.Owner
+                                """.format(column), [searchterm])
+
+    users = cur.fetchall()
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return render_template('{}.html'.format(searchType), users=users)
 
 @app.route('/OwnerOverview')
 @is_logged_in
 def OwnerOverview():
-    return render_template('OwnerOverview.html')
+    cur = mysql.connection.cursor()
+
+    # Get articles
+    result = cur.execute("SELECT User.Username, Email, COUNT(*) as NumProp FROM User join Property on User.Username = Property.Owner GROUP BY Username") 
+
+    owners = cur.fetchall()
+
+    # Close connection
+    cur.close()
+
+    return render_template('OwnerOverview.html', users=owners)
+
+@app.route('/DeleteOwnerAccount/<string:username>', methods=['POST'])
+@is_logged_in
+def DeleteOwnerAccount(username):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM User WHERE Username = %s", [username])
+    cur.execute("DELETE FROM Property WHERE Owner = %s", [username])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('OwnerOverview'))
+
+################################################################################
+
+
+@app.route('/SortBy/', methods=['POST'])
+@is_logged_in  
+def SortBy():  
+    column = request.form['column']
+    sortType = request.form['sortType']
+    print(sortType)
+    if column == '':
+        return redirect(url_for(sortType))
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+    if sortType == "OwnerOverview":
+        result = cur.execute("""SELECT User.Username, Email, COUNT(*) as NumProp
+                            FROM User JOIN Property ON User.Username = Property.Owner
+                            WHERE UserType = 'OWNER' 
+                            GROUP BY Property.Owner
+                            ORDER BY {}""".format(column))
+    elif sortType == "VisitorOverview":
+        result = cur.execute("""SELECT User.Username, Email, COUNT(*) as NumVisits
+                            FROM Visit JOIN User ON User.Username = Visit.Username
+                            WHERE UserType = 'VISITOR' 
+                            GROUP BY Visit.Username 
+                            ORDER BY {}""".format(column))
+
+    elif sortType == "ConfirmedProperties":
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE ApprovedBy IS NOT NULL
+                            GROUP BY ID 
+                            ORDER BY {}""".format(column))
+        properties = cur.fetchall()
+        cur.close()
+
+        return render_template('{}.html'.format(sortType), properties = properties)
+
+    elif sortType == "UnconfirmedProperties":
+        result = cur.execute("""SELECT *
+                            FROM Property
+                            WHERE ApprovedBy IS NOT NULL
+                            GROUP BY ID 
+                            ORDER BY {}""".format(column))
+        properties = cur.fetchall()
+        cur.close()
+
+        return render_template('{}.html'.format(sortType), properties = properties)
+
+    elif sortType == "ApprovedItems":
+        result = cur.execute("""SELECT *
+                            FROM FarmItem
+                            WHERE IsApproved 
+                            ORDER BY {}""".format(column))
+        items = cur.fetchall()
+        cur.close()
+
+        return render_template('{}.html'.format(sortType), items = items)
+
+    elif sortType == "PendingItems":
+        result = cur.execute("""SELECT *
+                            FROM FarmItem
+                            WHERE NOT IsApproved 
+                            ORDER BY {}""".format(column))
+        items = cur.fetchall()
+        cur.close()
+
+        return render_template('{}.html'.format(sortType), items = items)
+
+    elif sortType == "OwnerFunctionality":
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE Owner = %s
+                            GROUP BY ID
+                            ORDER BY {}""".format(column), [session['username']])
+        properties = cur.fetchall()
+        cur.close()
+        return render_template('{}.html'.format(sortType), properties = properties)
+
+    elif sortType == "VisitorFunctionality":
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE ApprovedBy IS NOT NULL AND IsPublic
+                            GROUP BY ID
+                            ORDER BY {}""".format(column))
+        properties = cur.fetchall()
+        cur.close()
+        return render_template('{}.html'.format(sortType), properties = properties)
+
+    elif sortType == "OtherOwnersProperties":
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE ApprovedBy IS NOT NULL AND IsPublic AND NOT Owner = %s
+                            GROUP BY ID
+                            ORDER BY {}""".format(column), [session['username']])
+        properties = cur.fetchall()
+        cur.close()
+        return render_template('{}.html'.format(sortType), properties = properties)
+
+    users = cur.fetchall()
+    cur.close()
+
+    return render_template('{}.html'.format(sortType), users = users)
 
 ################################################################################
 
@@ -396,11 +745,15 @@ def SearchProperties():
     column = request.form['column']
     searchterm = request.form['searchterm']
     searchType = request.form['searchType']
+    if searchterm == '' or column == '':
+        return redirect(url_for(searchType))
+
     if column in ['IsPublic', 'IsCommercial', 'IsApproved']:
         if searchterm.lower() in ['yes', 'true']:
             searchterm = 1
         else:
             searchterm = 0
+<<<<<<< HEAD
     if searchterm == '' or column == '':
         return redirect(url_for(searchType))
     range = False
@@ -412,6 +765,8 @@ def SearchProperties():
             upper = float(numvallist[1])
 
 
+=======
+>>>>>>> 596245d46668561ca19f1239da38fba20b403992
 
     # Create cursor
     cur = mysql.connection.cursor()
@@ -534,12 +889,19 @@ def PendingItems():
 def AddItem():
     itemType = request.form['type']
     name = request.form['name']
+    approved = bool(request.form['approved'])
+
+    if itemType == "" or name == "":
+        if approved:
+            return redirect(url_for('ApprovedItems'))
+        else:
+            return redirect(url_for('ManageItems'))
 
     # Create cursor
     cur = mysql.connection.cursor()
 
     # Execute
-    cur.execute("INSERT INTO FarmItem(Name, IsApproved, Type) VALUES(%s, TRUE, %s)", [name, itemType])
+    cur.execute("INSERT INTO FarmItem(Name, IsApproved, Type) VALUES(%s, %s, %s)", [name, approved, itemType])
 
     # Commit to DB
     mysql.connection.commit()
@@ -547,7 +909,10 @@ def AddItem():
     #Close connection
     cur.close()
 
-    return redirect(url_for('ApprovedItems'))
+    if approved:
+        return redirect(url_for('ApprovedItems'))
+    else:
+        return redirect(url_for('ManageItems'))
 
 @app.route('/DeleteItem/<string:name>', methods=['POST'])
 def DeleteItem(name):
@@ -653,7 +1018,7 @@ def VisitorHistory():
     # Create cursor
     cur = mysql.connection.cursor()
 
-    result = cur.execute("""SELECT Name, VisitDate, Rating FROM Visit JOIN Property ON PropertyID = ID WHERE Username = %s""", [session['username']])
+    result = cur.execute("""SELECT Name, date(substring(VisitDate from 1 for 10)) as VisitDate, Rating FROM Visit JOIN Property ON PropertyID = ID WHERE Username = %s;""", [session['username']])
 
     visits = cur.fetchall()
 

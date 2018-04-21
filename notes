@@ -1,11 +1,8 @@
 small things:
     sorting
     log/unlog visit
-    formatting of datetime object on visitor history
-
-pages left to work on:
-    Owner/VisitorOverview (Kai)
-    Admin/OwnerManageProperty (Josh)
+    search in a range
+    when property is managed, it loses all visit history
 
 done pages:
     Owner Registration
@@ -17,6 +14,10 @@ done pages:
     Visitor Functionality
     Other Owners' Properties
 
+    Manage Property
+
+    Owner Overview
+    Visitor Overview
     Approved Items
     Pending Items
     Confirmed Properties

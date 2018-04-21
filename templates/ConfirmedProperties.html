@@ -20,7 +20,7 @@
         </tr>
         {% for property in properties %}
             <tr>
-                <td><a href="/AdminManageProperty/{{property.ID}}">{{property.Name}}</a></td>
+                <td><a href="/ManageProperty/{{property.ID}}/c">{{property.Name}}</a></td>
                 <td>{{"%05d"|format(property.ID)}}</td>
                 <td>{{property.Street}}</td>
                 <td>{{property.City}}</td>
@@ -60,6 +60,20 @@
 
     <div class="text-right">
         <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
+    </div>
+    <div class="text-left">
+        <form action="{{url_for('SortBy')}}" method="post">
+            <input type="hidden" name="sortType" value="ConfirmedProperties">
+            <select name="column">
+                <option value="">Sort by</option>
+                <option value = Name>Name</option>       
+                <option value = Zip>Zip</option>     
+                <option value = PropertyType>Type</option>
+                <option value = ApprovedBy>Approved By</option>
+                <option value = AverageRating>Average Rating</option>
+            </select><br>
+            <input type="submit" value="Sort" class="btn btn-submit">
+        </form>
     </div>
 
 {% endblock %}

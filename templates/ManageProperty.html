@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Manage {{session.propertyName}}</h1>
+  {% from "includes/_formhelpers.html" import render_field %}
+  <form method="POST" action="">
+    <div class="form-group">
+      {{render_field(form.propertyName, class_="form-control")}}<br>
+      <p><strong>Property Type: </strong>{{session.propertyType}}</p>
+      <p><strong>Property ID: </strong>{{session.propertyID}}</p>
+      {{render_field(form.street, class_="form-control")}}
+      {{render_field(form.city, class_="form-control")}}
+      {{render_field(form.zipCode, class_="form-control")}}
+      {{render_field(form.size, class_="form-control")}}
+      {{render_field(form.isPublic, class_="form-control")}}
+      {{render_field(form.isCommercial, class_="form-control")}}
+    </div>
+    <div class="text-center">
+      <a href="/ManageItems"><strong>Click here to add/remove items from this property</strong></a>
+    </div>
+    <div class="text-right">
+      {% if session.userType == 'ADMIN' %}
+        <p><input type="submit" class="btn btn-primary" value="Save (Confirm)"></p>
+        <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
+      {% elif session.userType == 'OWNER' %}
+        <p><input type="submit" class="btn btn-primary" value="Submit"></p>
+        <a href="/OwnerFunctionality" class="btn btn-primary">Back</a>
+      {% endif %}
+    </div>
+  </form>
+  <div class="text-left">
+    <form action="{{url_for('DeleteProperty', ID=session.propertyID)}}" method="post">
+        <input type="hidden" name="_method" value="DELETE">
+        <input type="submit" value="Delete Property" class="btn btn-danger">
+    </form>
+  </div>
+{% endblock %}
+
