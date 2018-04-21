@@ -368,6 +368,7 @@ def ManageProperty(ID, manageType):
             cur.execute ("""UPDATE Property SET Name=%s, Street=%s, City=%s, Zip=%s, Size=%s, IsPublic=%s, IsCommercial=%s, ApprovedBy=%s
                             WHERE ID=%s""",(propertyName, street, city, zipCode, size, isPublic, isCommercial, session['username'], ID))
 
+        cur.execute("""DELETE FROM Visit WHERE PropertyID=%s""",[ID])
         # Commit to DB
         mysql.connection.commit()
 
@@ -479,7 +480,7 @@ def VisitorOverview():
     cur = mysql.connection.cursor()
 
     # Get articles
-    result = cur.execute("SELECT Visit.Username, Email, COUNT(*) as LogVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username") 
+    result = cur.execute("SELECT Visit.Username, Email, COUNT(*) as LogVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username")
 
     visitors = cur.fetchall()
 
@@ -537,7 +538,7 @@ def SearchUsers():
     if searchType == "VisitorOverview":
         result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
                                 FROM Visit JOIN User ON User.Username = Visit.Username
-                                WHERE UserType = 'VISITOR' AND User.{} = %s 
+                                WHERE UserType = 'VISITOR' AND User.{} = %s
                                 GROUP BY Visit.Username
                                 """.format(column), [searchterm])
     elif searchType == "OwnerOverview":
@@ -563,7 +564,7 @@ def OwnerOverview():
     cur = mysql.connection.cursor()
 
     # Get articles
-    result = cur.execute("SELECT User.Username, Email, COUNT(*) as NumProp FROM User join Property on User.Username = Property.Owner GROUP BY Username") 
+    result = cur.execute("SELECT User.Username, Email, COUNT(*) as NumProp FROM User join Property on User.Username = Property.Owner GROUP BY Username")
 
     owners = cur.fetchall()
 
@@ -594,8 +595,8 @@ def DeleteOwnerAccount(username):
 
 
 @app.route('/SortBy/', methods=['POST'])
-@is_logged_in  
-def SortBy():  
+@is_logged_in
+def SortBy():
     column = request.form['column']
     sortType = request.form['sortType']
     print(sortType)
@@ -607,21 +608,21 @@ def SortBy():
     if sortType == "OwnerOverview":
         result = cur.execute("""SELECT User.Username, Email, COUNT(*) as NumProp
                             FROM User JOIN Property ON User.Username = Property.Owner
-                            WHERE UserType = 'OWNER' 
+                            WHERE UserType = 'OWNER'
                             GROUP BY Property.Owner
                             ORDER BY {}""".format(column))
     elif sortType == "VisitorOverview":
         result = cur.execute("""SELECT User.Username, Email, COUNT(*) as NumVisits
                             FROM Visit JOIN User ON User.Username = Visit.Username
-                            WHERE UserType = 'VISITOR' 
-                            GROUP BY Visit.Username 
+                            WHERE UserType = 'VISITOR'
+                            GROUP BY Visit.Username
                             ORDER BY {}""".format(column))
 
     elif sortType == "ConfirmedProperties":
         result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
                             FROM Property LEFT JOIN Visit ON ID = PropertyID
                             WHERE ApprovedBy IS NOT NULL
-                            GROUP BY ID 
+                            GROUP BY ID
                             ORDER BY {}""".format(column))
         properties = cur.fetchall()
         cur.close()
@@ -632,7 +633,7 @@ def SortBy():
         result = cur.execute("""SELECT *
                             FROM Property
                             WHERE ApprovedBy IS NOT NULL
-                            GROUP BY ID 
+                            GROUP BY ID
                             ORDER BY {}""".format(column))
         properties = cur.fetchall()
         cur.close()
@@ -642,7 +643,7 @@ def SortBy():
     elif sortType == "ApprovedItems":
         result = cur.execute("""SELECT *
                             FROM FarmItem
-                            WHERE IsApproved 
+                            WHERE IsApproved
                             ORDER BY {}""".format(column))
         items = cur.fetchall()
         cur.close()
@@ -652,7 +653,7 @@ def SortBy():
     elif sortType == "PendingItems":
         result = cur.execute("""SELECT *
                             FROM FarmItem
-                            WHERE NOT IsApproved 
+                            WHERE NOT IsApproved
                             ORDER BY {}""".format(column))
         items = cur.fetchall()
         cur.close()
