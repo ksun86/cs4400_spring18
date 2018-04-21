@@ -21,7 +21,7 @@
         </tr>
         {% for property in properties %}
             <tr>
-                <td><a href="/PropertyDetails/{{property.ID}}">{{property.Name}}</a></td>
+                <td><a href="/OwnerManageProperty/{{property.ID}}">{{property.Name}}</a></td>
                 <td>{{"%05d"|format(property.ID)}}</td>
                 <td>{{property.Street}}</td>
                 <td>{{property.City}}</td>

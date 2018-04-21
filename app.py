@@ -565,7 +565,7 @@ def PropertyDetails(ID):
     # Create cursor
     cur = mysql.connection.cursor()
 
-    # Get article
+    # Get properties
     result = cur.execute("""SELECT Name, Owner, Email, Street, City, Zip, Size, COUNT(Rating) AS NumVisits, AVG(Rating) AS AverageRating, PropertyType, IsPublic, IsCommercial, ID
                             FROM Property
                             JOIN User On Owner = User.Username
@@ -592,12 +592,30 @@ def PropertyDetails(ID):
     animals = ', '.join(animals)
     crops = ', '.join(crops)
 
-    return render_template('PropertyDetails.html', property=prop, animals=animals, crops=crops)#, items=items)
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return render_template('PropertyDetails.html', property=prop, animals=animals, crops=crops)
 
 @app.route('/VisitorHistory')
 @is_logged_in
 def VisitorHistory():
-    return render_template('VisitorHistory.html')
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    result = cur.execute("""SELECT Name, VisitDate, Rating FROM Visit JOIN Property ON PropertyID = ID WHERE Username = %s""", [session['username']])
+
+    visits = cur.fetchall()
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+    return render_template('VisitorHistory.html', visits=visits)
 
 ################################################################################
 

@@ -15,8 +15,8 @@
     <p><strong>Public: </strong>{% if property.IsPublic == 1 %}Yes{% else %}No{% endif %}</p>
     <p><strong>Commercial: </strong>{% if property.IsCommercial == 1 %}Yes{% else %}No{% endif %}</p>
     <p><strong>ID: </strong>{{"%05d"|format(property.ID)}}</p><br>
-    <p><strong>Crops: </strong>{{crops}}</p>
-    <p><strong>Animals: </strong>{{animals}}</p>
+    <p><strong>Crops: </strong>{% if crops %}{{crops}}{% else %}None{% endif %}</p>
+    <p><strong>Animals: </strong>{% if animals %}{{animals}}{% else %}None{% endif %}</p>
 
     {% if session.userType == 'VISITOR' %}
         <a href="/VisitorFunctionality" class="btn btn-primary">Log/Unlog Visit</a> <!-- figure out ish for doing the actual rating and how to make only visitors be able to see this -->
