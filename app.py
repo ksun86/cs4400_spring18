@@ -479,7 +479,7 @@ def VisitorOverview():
     cur = mysql.connection.cursor()
 
     # Get articles
-    result = cur.execute("SELECT Visit.Username, Email, COUNT(*) as LogVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username") 
+    result = cur.execute("SELECT Visit.Username, Email, COUNT(Rating) as NumVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username") 
 
     visitors = cur.fetchall()
 
@@ -952,13 +952,21 @@ def PropertyDetails(ID):
     animals = ', '.join(animals)
     crops = ', '.join(crops)
 
+    numvisit= cur.execute("""SELECT * from Visit WHERE Username= %s AND PropertyID=%s""", [session['username'], ID])
+
+    if numvisit > 0:
+        logged = True
+    else:
+        logged = False
+
+
     # Commit to DB
     mysql.connection.commit()
 
     #Close connection
     cur.close()
 
-    return render_template('PropertyDetails.html', property=prop, animals=animals, crops=crops)
+    return render_template('PropertyDetails.html', property=prop, animals=animals, crops=crops, logged=logged)
 
 @app.route('/VisitorHistory')
 @is_logged_in
@@ -977,22 +985,44 @@ def VisitorHistory():
     cur.close()
     return render_template('VisitorHistory.html', visits=visits)
 
+@app.route('/LogVisit<string:ID>', methods=['POST'])
+@is_logged_in
+def LogVisit(ID):
+    rating = int(request.form['rating'])
+    if rating == 0:
+        return redirect(url_for('PropertyDetails', ID=ID))
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    result = cur.execute("INSERT INTO Visit(Username, PropertyID, VisitDate, Rating) VALUES(%s, %s, CURRENT_TIMESTAMP, %s)", [session['username'], ID, rating])
+    
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('PropertyDetails', ID=ID))
+
+@app.route('/UnlogVisit<string:ID>', methods=['POST'])
+@is_logged_in
+def UnlogVisit(ID):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    result = cur.execute("DELETE FROM Visit WHERE Username=%s AND PropertyID=%s", [session['username'], ID])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+    return redirect(url_for('PropertyDetails', ID=ID))
+
+
 ################################################################################
 
 if __name__ == '__main__':
     app.secret_key='secret123'
     app.run(debug=True)
-
-
-# SELECT Property.Name, User.Username, Email, Street, City, Zip, Size, COUNT(Rating) AS NumVisits, AVG(Rating) AS AverageRating, PropertyType, IsPublic, IsCommercial, ID, FarmItem.Name
-# FROM Property
-# JOIN User On Owner = User.Username
-# LEFT JOIN Visit ON Visit.PropertyID = ID
-# LEFT JOIN Has ON Has.PropertyID = ID
-# JOIN FarmItem ON ItemName = FarmItem.Name
-# GROUP BY ID
-# ORDER BY Property.Name
-
-# Select Property.Name, FarmItem.Name
-# from Has Join Property ON Has.PropertyID = ID
-# JOIN FarmItem ON ItemName = FarmItem.Name

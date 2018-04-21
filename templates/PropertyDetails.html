@@ -19,11 +19,28 @@
     <p><strong>Animals: </strong>{% if animals %}{{animals}}{% else %}None{% endif %}</p>
 
     {% if session.userType == 'VISITOR' %}
-        <a href="/VisitorFunctionality" class="btn btn-primary">Log/Unlog Visit</a> <!-- figure out ish for doing the actual rating and how to make only visitors be able to see this -->
+        {% if logged %}
+            <form action="{{url_for('UnlogVisit', ID=property.ID)}}" method="post">
+                <input type="hidden" name="_method" value="UNLOG">
+                <input type="submit" value="Unlog Visit" class="btn btn-primary">
+            </form>
+        {% else %}
+            <form action="{{url_for('LogVisit', ID=property.ID)}}" method="post">
+                <input type="hidden" name="_method" value="LOG">
+                <select name='rating'>
+                    <option value=0>Rating:</option>
+                    <option value=1>1</option>
+                    <option value=2>2</option>
+                    <option value=3>3</option>
+                    <option value=4>4</option>
+                    <option value=5>5</option>
+                </select>
+                <input type="submit" value="Log Visit" class="btn btn-primary">
+            </form>
+        {% endif %}
         <a href="/VisitorFunctionality" class="btn btn-primary">Back</a>
     {% elif session.userType == 'OWNER' %}
         <a href="/OwnerFunctionality" class="btn btn-primary">Back</a>
     {% endif %}
-
 
 {% endblock %}
