@@ -480,7 +480,7 @@ def VisitorOverview():
     cur = mysql.connection.cursor()
 
     # Get articles
-    result = cur.execute("SELECT Visit.Username, Email, COUNT(*) as LogVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username")
+    result = cur.execute("SELECT Visit.Username, Email, COUNT(*) as NumVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username")
 
     visitors = cur.fetchall()
 
@@ -533,20 +533,45 @@ def SearchUsers():
     if searchterm == '' or column == '':
         return redirect(url_for(searchType))
 
+    range = False
+    if column in ['NumVisits', 'AverageRating']:
+        if "-" in searchterm:
+            range = True
+            numvallist = searchterm.split("-")
+            lower = float(numvallist[0])
+            upper = float(numvallist[1])
+
     cur = mysql.connection.cursor()
 
     if searchType == "VisitorOverview":
-        result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
-                                FROM Visit JOIN User ON User.Username = Visit.Username
-                                WHERE UserType = 'VISITOR' AND User.{} = %s
-                                GROUP BY Visit.Username
-                                """.format(column), [searchterm])
+        if range:
+            result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
+                                    FROM Visit JOIN User ON User.Username = Visit.Username
+                                    WHERE UserType = 'VISITOR'
+                                    GROUP BY Visit.Username
+                                    HAVING {} BETWEEN {} AND {}
+                                    """.format(column, lower, upper))
+        else:
+            result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
+                                    FROM Visit JOIN User ON User.Username = Visit.Username
+                                    WHERE UserType = 'VISITOR' AND User.{} = %s
+                                    GROUP BY Visit.Username
+                                    """.format(column), [searchterm])
     elif searchType == "OwnerOverview":
-        result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumProp
+        if range:
+            result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumProp
+                                    FROM Property JOIN User ON User.Username = Property.Owner
+                                    WHERE UserType = 'OWNER'
+                                    GROUP BY Property.Owner
+                                    HAVING {} BETWEEN {} AND {}
+                                    ORDER BY Name""".format(column, lower, upper))
+        else:
+            result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumProp
                                 FROM Property JOIN User ON User.Username = Property.Owner
                                 WHERE UserType = 'OWNER' AND User.{} = %s
                                 GROUP BY Property.Owner
                                 """.format(column), [searchterm])
+
 
     users = cur.fetchall()
 
@@ -754,9 +779,7 @@ def SearchProperties():
             searchterm = 1
         else:
             searchterm = 0
-<<<<<<< HEAD
-    if searchterm == '' or column == '':
-        return redirect(url_for(searchType))
+
     range = False
     if column in ['NumVisits', 'AverageRating']:
         if "-" in searchterm:
@@ -764,10 +787,6 @@ def SearchProperties():
             numvallist = searchterm.split("-")
             lower = float(numvallist[0])
             upper = float(numvallist[1])
-
-
-=======
->>>>>>> 596245d46668561ca19f1239da38fba20b403992
 
     # Create cursor
     cur = mysql.connection.cursor()
