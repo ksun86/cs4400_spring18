@@ -1,14 +1,30 @@
+small things:
+    sorting
+    log/unlog visit
+    formatting of datetime object on visitor history
+
 pages left to work on:
-    Owner/VisitorFunctionality & OtherOwnersProperties (Aashini, Kelly, Lauren)
-
     Owner/VisitorOverview (Kai)
-
-    Approved/PendingItems (Josh)
-    Confirmed/UnconfirmedProperties (Josh)
-
     Admin/OwnerManageProperty (Josh)
+
+done pages:
+    Owner Registration
+    Visitor Registration
+    Log in
+
+    Admin Functionality
+    Owner Functionality
+    Visitor Functionality
+    Other Owners' Properties
+
+    Approved Items
+    Pending Items
+    Confirmed Properties
+    Unconfirmed Properties
+
     VisitorHistory
     PropertyDetails
+
 
 case conventions:
     htmls, method, and routes - PascalCase

@@ -2,74 +2,67 @@
 
 {% block body %}
     <h1>Welcome {{session.username}}</h1>
-    <p>Click on a property to view its details</p>
+
 
     <table class="table table-striped">
-
+    <p>Click on a property to view its details/log a visit</p>
         <tr>
             <th>Name</th>
-            <th>Address</th>
+            <th>ID</th>
+            <th>Street</th>
             <th>City</th>
             <th>Zip</th>
             <th>Size</th>
             <th>Type</th>
             <th>Public</th>
             <th>Commercial</th>
-            <th>ID</th>
-            <th>isValid</th>
-            <th>Visits</th>
-            <th>Avg. Rating</th>
+            <th>Number of Visits</th>
+            <th>Average Rating</th>
         </tr>
         {% for property in properties %}
             <tr>
-                <td><a href="/PropertyDetails/{{property.propertyID}}">{{property.propertyName}}</a></td>
-                <td>{{property.address}}</td>
-                <td>{{property.city}}</td>
-                <td>{{property.zipCode}}</td>
-                <td>{{property.size}}</td>
-                <td>{{property.propertyType}}</td>
-                <td>{{property.isPublic}}</td>
-                <td>{{property.isCommercial}}</td>
-                <td>{{property.propertyID}}</td>
-                <!-- DERIVED ATTRIBUTES: HAVE TO FIGURE THIS OUT -->
-                <td>{{property.isValid}}</td>
-                <td>{{property.numvisits}}</td>
-                <td>{{property.rating}}.7</td>
+                <td><a href="/PropertyDetails/{{property.ID}}">{{property.Name}}</a></td>
+                <td>{{"%05d"|format(property.ID)}}</td>
+                <td>{{property.Street}}</td>
+                <td>{{property.City}}</td>
+                <td>{{property.Zip}}</td>
+                <td>{{property.Size}}</td>
+                <td>{{property.PropertyType}}</td>
+                <td>{% if property.IsPublic == 1 %}Yes{% else %}No{% endif %}</td>
+                <td>{% if property.IsCommercial == 1 %}Yes{% else %}No{% endif %}</td>
+                <td>{{property.NumVisits}}</td>
+                <td>{% if property.AverageRating %}{{"%.1f"|format(property.AverageRating)}}{% else %}{{property.AverageRating}}{% endif %}</td>
             </tr>
         {% endfor %}
     </table>
 
-    <select>
-         <option value = searchby>Search by...</option>
-        <option value = name>Name</option>
-        <option value = address>Address</option>
-        <option value = city>City</option>
-        <option value = zip>Zip</option>
-        <option value = size>Size</option>
-        <option value = type>Type</option>
-        <option value = public>Public</option>
-        <option value = commerical>Commerical</option>
-        <option value = id>ID</option>
-        <option value = visits>Visits</option>
-        <option value = avgrating>Avg. Rating</option>
-
-
-    </select>
-
-
-
-    <div class = "form-group">
-        <input type= "text" name="Search term", class= "form-control", value= {{request.form.search}}>
-    </div>
-    <div class = "text-align: right">
-        <!-- figure out how to appropriately redirect the search properties -->
-        <a href="/" class="btn btn-primary">Search Properties</a>
+    <div class="text-left">
+        <form action="{{url_for('SearchProperties')}}" method="post">
+            <input type="hidden" name="_method" value="Search">
+            <input type="hidden" name="searchType" value='VisitorFunctionality'>
+            <select name="column">
+                <option value="">Search by</option>
+                <option value = Name>Name</option>
+                <option value = ID>ID</option>
+                <option value = Street>Street</option>
+                <option value = City>City</option>
+                <option value = Zip>Zip</option>
+                <option value = Size>Size</option>
+                <option value = PropertyType>Type</option>
+                <option value = IsPublic>Public</option>
+                <option value = IsCommercial>Commercial</option>
+                <option value = ApprovedBy>Number of Visits</option>
+                <option value = AverageRating>Average Rating</option>
+            </select><br>
+            <input type="text" name="searchterm"><br>
+            <input type="submit" value="Search" class="btn btn-submit">
+        </form>
     </div>
 
-    <div style = "text-align:center">
+    <div class="text-center">
         <a href="/VisitorHistory" class="btn btn-primary">View Visit History</a>
     </div>
-    <div class = "text-left">
+    <div class="text-right">
         <a href="/Logout" class="btn btn-primary">Log Out</a>
     </div>
 
