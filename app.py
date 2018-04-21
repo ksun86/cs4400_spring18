@@ -391,29 +391,70 @@ def DeleteLogHistory(username):
 
     return redirect(url_for('VisitorOverview'))
 
-# @app.route('/SearchByEmail/<string:email>', methods=['POST'])
-# def SearchByEmail(username):
-#     # Create cursor
-#     cur = mysql.connection.cursor()
+@app.route('/SearchUsers', methods=['POST'])
+def SearchUsers():
+    column = request.form['column']
+    searchterm = request.form['searchterm']
+    searchType = request.form['searchType']
+    if searchterm == '' or column == '':
+        return redirect(url_for(searchType))
 
-#     # Execute
-#     cur.execute("DELETE FROM Visit WHERE Username = %s", [username])
+    cur = mysql.connection.cursor()
 
-#     # Commit to DB
-#     mysql.connection.commit()
+    if searchType == "VisitorOverview":
+        result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
+                                FROM Visit JOIN User ON User.Username = Visit.Username
+                                WHERE UserType = 'VISITOR' AND User.{} = %s
+                                GROUP BY Visit.Username
+                                """.format(column), [searchterm])
+    elif searchType == "OwnerOverview":
+        result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
+                                FROM Property JOIN User ON User.Username = Property.Owner
+                                WHERE UserType = 'OWNER' AND User.{} = %s
+                                GROUP BY Property.Owner
+                                """.format(column), [searchterm])
 
-#     #Close connection
-#     cur.close()
+    users = cur.fetchall()
 
-#     return redirect(url_for('VisitorOverview'))
+    # Commit to DB
+    mysql.connection.commit()
 
+    #Close connection
+    cur.close()
 
-
+    return render_template('{}.html'.format(searchType), users=users)
 
 @app.route('/OwnerOverview')
 @is_logged_in
 def OwnerOverview():
-    return render_template('OwnerOverview.html')
+    cur = mysql.connection.cursor()
+
+    # Get articles
+    result = cur.execute("SELECT User.Username, Email, COUNT(*) as NumProp FROM User join Property on User.Username = Property.Owner GROUP BY Username") 
+
+    owners = cur.fetchall()
+
+    # Close connection
+    cur.close()
+
+    return render_template('OwnerOverview.html', owners=owners)
+
+@app.route('/DeleteOwnerAccount/<string:username>', methods=['POST'])
+def DeleteOwnerAccount(username):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM User WHERE Username = %s", [username])
+    cur.execute("DELETE FROM Property WHERE Owner = %s", [username])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('OwnerOverview'))
 
 ################################################################################
 

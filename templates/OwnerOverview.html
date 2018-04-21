@@ -1,35 +1,28 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-    <h1>All Visitors in System</h1>
- 
+    <h1>All Owners in System</h1>
+   
 
     <table class="table table-striped">
         <tr>
             <th>Username</th>
-            <th>Delete Visitors</th>
+            <th>Delete Owners</th>
             <th>Email</th>
-            <th>Logged Visits</th>
-            <th>Delete Log History</th>
+            <th>Number of Properties</th>
         </tr>
         <!-- we'll need a for loop to iterate through for each row of the table -->
-            {% for visitor in visitors %}
+            {% for owner in owners %}
             <tr>
-                <td>{{visitor.Username}}</td>
+                <td>{{owner.Username}}</td>
                 <td>
-                    <form action="{{url_for('DeleteVisitorAccount', username=visitor.Username)}}" method="post">
+                    <form action="{{url_for('DeleteOwnerAccount', username=owner.Username)}}" method="post">
                         <input type="hidden" name="_method" value="DELETE">
                         <input type="submit" value="Delete" class="btn btn-danger">
                     </form>
                 </td>
-                <td>{{visitor.Email}}</td>
-                <td>{{visitor.LogVisits}}</td>  
-                <td>
-                    <form action="{{url_for('DeleteLogHistory', username=visitor.Username)}}" method="post">
-                        <input type="hidden" name="_method" value="DELETE">
-                        <input type="submit" value="Delete" class="btn btn-danger">
-                    </form>
-                </td>
+                <td>{{owner.Email}}</td>
+                <td>{{owner.NumProp}}</td>  
             </tr>
         {% endfor %}
     </table>
@@ -37,7 +30,7 @@
     <div class="text-left">
         <form action="{{url_for('SearchUsers')}}" method="post">
             <input type="hidden" name="_method" value="Search">
-            <input type="hidden" name="searchType" value="VisitorOverview">
+            <input type="hidden" name="searchType" value="OwnerOverview">
             <select name="column">
                 <option value="">Search by</option>
                 <option value="Username">Username</option>
@@ -50,6 +43,7 @@
 
     <!-- insert searching functionality -->
 
+   
     <div class="text-right">
         <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
     </div>
