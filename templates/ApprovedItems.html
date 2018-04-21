@@ -40,6 +40,7 @@
     <div class="text-center">
         <form action="{{url_for('AddItem')}}" method="post">
             <input type="hidden" name="_method" value="ADD">
+            <input type="hidden" name="approved" value="True">
             <select name="type">
                 <option>Select Item Type</option>
                 <option value="ANIMAL">Animal</option>

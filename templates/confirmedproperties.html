@@ -20,7 +20,7 @@
         </tr>
         {% for property in properties %}
             <tr>
-                <td><a href="/AdminManageProperty/{{property.ID}}">{{property.Name}}</a></td>
+                <td><a href="/ManageProperty/{{property.ID}}/c">{{property.Name}}</a></td>
                 <td>{{"%05d"|format(property.ID)}}</td>
                 <td>{{property.Street}}</td>
                 <td>{{property.City}}</td>
@@ -51,7 +51,7 @@
                 <option value = IsPublic>Public</option>
                 <option value = IsCommercial>Commercial</option>
                 <option value = ApprovedBy>Approved By</option>
-                <option value = AverageRating>Average Rating</option>
+                <option value = Rating>Average Rating</option>
             </select><br>
             <input type="text" name="searchterm"><br>
             <input type="submit" value="Search" class="btn btn-submit">
