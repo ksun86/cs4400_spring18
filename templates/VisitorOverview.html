@@ -13,7 +13,7 @@
             <th>Delete Log History</th>
         </tr>
         <!-- we'll need a for loop to iterate through for each row of the table -->
-            {% for visitor in visitors %}
+            {% for visitor in users %}
             <tr>
                 <td>{{visitor.Username}}</td>
                 <td>
@@ -23,7 +23,7 @@
                     </form>
                 </td>
                 <td>{{visitor.Email}}</td>
-                <td>{{visitor.LogVisits}}</td>  
+                <td>{{visitor.NumVisits}}</td>  
                 <td>
                     <form action="{{url_for('DeleteLogHistory', username=visitor.Username)}}" method="post">
                         <input type="hidden" name="_method" value="DELETE">
@@ -42,9 +42,23 @@
                 <option value="">Search by</option>
                 <option value="Username">Username</option>
                 <option value="Email">Email</option>
+                <option value="NumVisits">Logged Visits</option>
             </select><br>
             <input type="text" name="searchterm"><br>
             <input type="submit" value="Search" class="btn btn-submit">
+        </form>
+    </div>
+
+    <div class="text-left">
+        <form action="{{url_for('SortBy')}}" method="post">
+            <input type="hidden" name="sortType" value="VisitorOverview">
+            <select name="column">
+                <option value="">Sort by</option>
+                <option value="Username">Username</option>
+                <option value="Email">Email</option>
+                <option value="NumVisits">Logged Visits</option>
+            </select><br>
+            <input type="submit" value="Sort" class="btn btn-submit">
         </form>
     </div>
 

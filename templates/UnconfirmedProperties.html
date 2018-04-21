@@ -59,4 +59,17 @@
         <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
     </div>
 
+    <div class="text-left">
+        <form action="{{url_for('SortBy')}}" method="post">
+            <input type="hidden" name="sortType" value="UnconfirmedProperties">
+            <select name="column">
+                <option value="">Sort by</option>
+                <option value = Name>Name</option>       
+                <option value = Size>Size</option>     
+                <option value = Owner>Owner</option>
+            </select><br>
+            <input type="submit" value="Sort" class="btn btn-submit">
+        </form>
+    </div>
+
 {% endblock %}

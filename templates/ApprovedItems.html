@@ -37,7 +37,7 @@
         </form>
     </div>
 
-    <div class="text-center">
+    <div class="text-left">
         <form action="{{url_for('AddItem')}}" method="post">
             <input type="hidden" name="_method" value="ADD">
             <select name="type">
@@ -50,6 +50,18 @@
             </select><br>
             <input type="text" name="name"><br>
             <input type="submit" value="Add Item" class="btn btn-submit">
+        </form>
+    </div>
+
+    <div class="text-left">
+        <form action="{{url_for('SortBy')}}" method="post">
+            <input type="hidden" name="sortType" value="ApprovedItems">
+            <select name="column">
+                <option value="">Sort by</option>
+                <option value="Name">Name</option>
+                <option value="Type">Type</option>
+            </select><br>
+            <input type="submit" value="Sort" class="btn btn-submit">
         </form>
     </div>
 

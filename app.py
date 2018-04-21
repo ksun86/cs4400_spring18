@@ -260,10 +260,6 @@ def OwnerFunctionality():
 #################################################################################
 
 
-
-
-#################################################################################
-
 @app.route('/VisitorFunctionality')
 @is_logged_in
 def VisitorFunctionality():
@@ -356,9 +352,10 @@ def VisitorOverview():
     # Close connection
     cur.close()
 
-    return render_template('VisitorOverview.html', visitors=visitors)
+    return render_template('VisitorOverview.html', users=visitors)
 
 @app.route('/DeleteVisitorAccount/<string:username>', methods=['POST'])
+@is_logged_in
 def DeleteVisitorAccount(username):
     # Create cursor
     cur = mysql.connection.cursor()
@@ -376,6 +373,7 @@ def DeleteVisitorAccount(username):
     return redirect(url_for('VisitorOverview'))
 
 @app.route('/DeleteLogHistory/<string:username>', methods=['POST'])
+@is_logged_in
 def DeleteLogHistory(username):
     # Create cursor
     cur = mysql.connection.cursor()
@@ -392,6 +390,7 @@ def DeleteLogHistory(username):
     return redirect(url_for('VisitorOverview'))
 
 @app.route('/SearchUsers', methods=['POST'])
+@is_logged_in
 def SearchUsers():
     column = request.form['column']
     searchterm = request.form['searchterm']
@@ -404,11 +403,11 @@ def SearchUsers():
     if searchType == "VisitorOverview":
         result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
                                 FROM Visit JOIN User ON User.Username = Visit.Username
-                                WHERE UserType = 'VISITOR' AND User.{} = %s
+                                WHERE UserType = 'VISITOR' AND User.{} = %s 
                                 GROUP BY Visit.Username
                                 """.format(column), [searchterm])
     elif searchType == "OwnerOverview":
-        result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
+        result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumProp
                                 FROM Property JOIN User ON User.Username = Property.Owner
                                 WHERE UserType = 'OWNER' AND User.{} = %s
                                 GROUP BY Property.Owner
@@ -437,9 +436,10 @@ def OwnerOverview():
     # Close connection
     cur.close()
 
-    return render_template('OwnerOverview.html', owners=owners)
+    return render_template('OwnerOverview.html', users=owners)
 
 @app.route('/DeleteOwnerAccount/<string:username>', methods=['POST'])
+@is_logged_in
 def DeleteOwnerAccount(username):
     # Create cursor
     cur = mysql.connection.cursor()
@@ -455,6 +455,110 @@ def DeleteOwnerAccount(username):
     cur.close()
 
     return redirect(url_for('OwnerOverview'))
+
+################################################################################
+
+
+@app.route('/SortBy/', methods=['POST'])
+@is_logged_in  
+def SortBy():  
+    column = request.form['column']
+    sortType = request.form['sortType']
+    print(sortType)
+    if column == '':
+        return redirect(url_for(sortType))
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+    if sortType == "OwnerOverview":
+        result = cur.execute("""SELECT User.Username, Email, COUNT(*) as NumProp
+                            FROM User JOIN Property ON User.Username = Property.Owner
+                            WHERE UserType = 'OWNER' 
+                            GROUP BY Property.Owner
+                            ORDER BY {}""".format(column))
+    elif sortType == "VisitorOverview":
+        result = cur.execute("""SELECT User.Username, Email, COUNT(*) as NumVisits
+                            FROM Visit JOIN User ON User.Username = Visit.Username
+                            WHERE UserType = 'VISITOR' 
+                            GROUP BY Visit.Username 
+                            ORDER BY {}""".format(column))
+
+    elif sortType == "ConfirmedProperties":
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE ApprovedBy IS NOT NULL
+                            GROUP BY ID 
+                            ORDER BY {}""".format(column))
+        properties = cur.fetchall()
+        cur.close()
+
+        return render_template('{}.html'.format(sortType), properties = properties)
+
+    elif sortType == "UnconfirmedProperties":
+        result = cur.execute("""SELECT *
+                            FROM Property
+                            WHERE ApprovedBy IS NOT NULL
+                            GROUP BY ID 
+                            ORDER BY {}""".format(column))
+        properties = cur.fetchall()
+        cur.close()
+
+        return render_template('{}.html'.format(sortType), properties = properties)
+
+    elif sortType == "ApprovedItems":
+        result = cur.execute("""SELECT *
+                            FROM FarmItem
+                            WHERE IsApproved 
+                            ORDER BY {}""".format(column))
+        items = cur.fetchall()
+        cur.close()
+
+        return render_template('{}.html'.format(sortType), items = items)
+
+    elif sortType == "PendingItems":
+        result = cur.execute("""SELECT *
+                            FROM FarmItem
+                            WHERE NOT IsApproved 
+                            ORDER BY {}""".format(column))
+        items = cur.fetchall()
+        cur.close()
+
+        return render_template('{}.html'.format(sortType), items = items)
+
+    elif sortType == "OwnerFunctionality":
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE Owner = %s
+                            GROUP BY ID
+                            ORDER BY {}""".format(column), [session['username']])
+        properties = cur.fetchall()
+        cur.close()
+        return render_template('{}.html'.format(sortType), properties = properties)
+
+    elif sortType == "VisitorFunctionality":
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE ApprovedBy IS NOT NULL AND IsPublic
+                            GROUP BY ID
+                            ORDER BY {}""".format(column))
+        properties = cur.fetchall()
+        cur.close()
+        return render_template('{}.html'.format(sortType), properties = properties)
+
+    elif sortType == "OtherOwnersProperties":
+        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                            FROM Property LEFT JOIN Visit ON ID = PropertyID
+                            WHERE ApprovedBy IS NOT NULL AND IsPublic AND NOT Owner = %s
+                            GROUP BY ID
+                            ORDER BY {}""".format(column), [session['username']])
+        properties = cur.fetchall()
+        cur.close()
+        return render_template('{}.html'.format(sortType), properties = properties)
+
+    users = cur.fetchall()
+    cur.close()
+
+    return render_template('{}.html'.format(sortType), users = users)
 
 ################################################################################
 

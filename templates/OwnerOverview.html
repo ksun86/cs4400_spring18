@@ -12,7 +12,7 @@
             <th>Number of Properties</th>
         </tr>
         <!-- we'll need a for loop to iterate through for each row of the table -->
-            {% for owner in owners %}
+            {% for owner in users %}
             <tr>
                 <td>{{owner.Username}}</td>
                 <td>
@@ -35,13 +35,25 @@
                 <option value="">Search by</option>
                 <option value="Username">Username</option>
                 <option value="Email">Email</option>
+                <!-- <option value="COUNT(*)">Number of Properties</option> -->
             </select><br>
             <input type="text" name="searchterm"><br>
             <input type="submit" value="Search" class="btn btn-submit">
         </form>
     </div>
 
-    <!-- insert searching functionality -->
+    <div class="text-left">
+        <form action="{{url_for('SortBy')}}" method="post">
+            <input type="hidden" name="sortType" value="OwnerOverview">
+            <select name="column">
+                <option value="">Sort by</option>
+                <option value="Username">Username</option>
+                <option value="Email">Email</option>
+                <option value="NumProp">Number of Properties</option>
+            </select><br>
+            <input type="submit" value="Sort" class="btn btn-submit">
+        </form>
+    </div>
 
    
     <div class="text-right">
