@@ -2,10 +2,7 @@ small things:
     sorting
     log/unlog visit
     search in a range
-
-pages left to work on:
-    Owner/VisitorOverview (Kai)
-    Admin/OwnerManageProperty (Josh)
+    when property is managed, it loses all visit history
 
 done pages:
     Owner Registration
@@ -17,6 +14,10 @@ done pages:
     Visitor Functionality
     Other Owners' Properties
 
+    Manage Property
+
+    Owner Overview
+    Visitor Overview
     Approved Items
     Pending Items
     Confirmed Properties
