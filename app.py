@@ -250,6 +250,13 @@ def OwnerFunctionality():
 def AdminFunctionality():
     return render_template('AdminFunctionality.html')
 
+#################################################################################
+
+
+
+
+#################################################################################
+
 @app.route('/VisitorFunctionality')
 @is_logged_in
 def VisitorFunctionality():
@@ -290,9 +297,9 @@ def DeleteProperty(ID):
     #Close connection
     cur.close()
 
-    if session['userType'] == 'ADMIN':
+    if session['UserType'] == 'ADMIN':
         return redirect(url_for('AdminFunctionality'))
-    elif session['userType'] == 'OWNER':
+    elif session['UserType'] == 'OWNER':
         return redirect(url_for('OwnerFunctionality'))
 
 ################################################################################
@@ -305,7 +312,70 @@ def OtherOwnersProperties():
 @app.route('/VisitorOverview')
 @is_logged_in
 def VisitorOverview():
-    return render_template('VisitorOverview.html')
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Get articles
+    result = cur.execute("SELECT Visit.Username, Email, COUNT(*) as LogVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username") 
+
+    visitors = cur.fetchall()
+
+    # Close connection
+    cur.close()
+
+    return render_template('VisitorOverview.html', visitors=visitors)
+
+@app.route('/DeleteVisitorAccount/<string:username>', methods=['POST'])
+def DeleteVisitorAccount(username):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM User WHERE Username = %s", [username])
+    cur.execute("DELETE FROM Visit WHERE Username = %s", [username])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('VisitorOverview'))
+
+@app.route('/DeleteLogHistory/<string:username>', methods=['POST'])
+def DeleteLogHistory(username):
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute
+    cur.execute("DELETE FROM Visit WHERE Username = %s", [username])
+
+    # Commit to DB
+    mysql.connection.commit()
+
+    #Close connection
+    cur.close()
+
+    return redirect(url_for('VisitorOverview'))
+
+# @app.route('/SearchByEmail/<string:email>', methods=['POST'])
+# def SearchByEmail(username):
+#     # Create cursor
+#     cur = mysql.connection.cursor()
+
+#     # Execute
+#     cur.execute("DELETE FROM Visit WHERE Username = %s", [username])
+
+#     # Commit to DB
+#     mysql.connection.commit()
+
+#     #Close connection
+#     cur.close()
+
+#     return redirect(url_for('VisitorOverview'))
+
+
+
 
 @app.route('/OwnerOverview')
 @is_logged_in

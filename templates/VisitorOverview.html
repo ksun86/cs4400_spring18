@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+    <h1>All Visitors in System</h1>
+    <p>Click on a visitor to modify</p>
+
+    <table class="table table-striped">
+        <tr>
+            <th>Username</th>
+            <th></th>
+            <th>Email</th>
+            <th>Logged Visits</th>
+            <th></th>
+        </tr>
+        <!-- we'll need a for loop to iterate through for each row of the table -->
+            {% for visitor in visitors %}
+            <tr>
+                <td>{{visitor.Username}}</td>
+                <td>
+                    <form action="{{url_for('DeleteVisitorAccount', username=visitor.Username)}}" method="post">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <input type="submit" value="Delete" class="btn btn-danger">
+                    </form>
+                </td>
+                <td>{{visitor.Email}}</td>
+                <td>{{visitor.LogVisits}}</td>  
+                <td>
+                    <form action="{{url_for('DeleteLogHistory', username=visitor.Username)}}" method="post">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <input type="submit" value="Delete" class="btn btn-danger">
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <!-- insert searching functionality -->
+    <td><a href="/VisitorOverview" class="btn btn-primary">Delete User Account</a></td>
+    <td><a href="/VisitorOverview" class="btn btn-primary">Delete Log History</a></td>
+    <a href="/" class="btn btn-primary">Search Visitors</a>
+    <div class="text-right">
+        <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
+    </div>
+
+{% endblock %}
