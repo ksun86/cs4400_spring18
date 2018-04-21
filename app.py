@@ -368,6 +368,7 @@ def ManageProperty(ID, manageType):
             cur.execute ("""UPDATE Property SET Name=%s, Street=%s, City=%s, Zip=%s, Size=%s, IsPublic=%s, IsCommercial=%s, ApprovedBy=%s
                             WHERE ID=%s""",(propertyName, street, city, zipCode, size, isPublic, isCommercial, session['username'], ID))
 
+        cur.execute("""DELETE FROM Visit WHERE PropertyID=%s""",[ID])
         # Commit to DB
         mysql.connection.commit()
 
@@ -479,7 +480,11 @@ def VisitorOverview():
     cur = mysql.connection.cursor()
 
     # Get articles
+<<<<<<< HEAD
     result = cur.execute("SELECT Visit.Username, Email, COUNT(Rating) as NumVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username") 
+=======
+    result = cur.execute("SELECT Visit.Username, Email, COUNT(*) as NumVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username")
+>>>>>>> ca9ef6dada7f1a101ac5f8d6908a06f708ddc27c
 
     visitors = cur.fetchall()
 
@@ -532,20 +537,45 @@ def SearchUsers():
     if searchterm == '' or column == '':
         return redirect(url_for(searchType))
 
+    range = False
+    if column in ['NumVisits', 'AverageRating']:
+        if "-" in searchterm:
+            range = True
+            numvallist = searchterm.split("-")
+            lower = float(numvallist[0])
+            upper = float(numvallist[1])
+
     cur = mysql.connection.cursor()
 
     if searchType == "VisitorOverview":
-        result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
-                                FROM Visit JOIN User ON User.Username = Visit.Username
-                                WHERE UserType = 'VISITOR' AND User.{} = %s 
-                                GROUP BY Visit.Username
-                                """.format(column), [searchterm])
+        if range:
+            result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
+                                    FROM Visit JOIN User ON User.Username = Visit.Username
+                                    WHERE UserType = 'VISITOR'
+                                    GROUP BY Visit.Username
+                                    HAVING {} BETWEEN {} AND {}
+                                    """.format(column, lower, upper))
+        else:
+            result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
+                                    FROM Visit JOIN User ON User.Username = Visit.Username
+                                    WHERE UserType = 'VISITOR' AND User.{} = %s
+                                    GROUP BY Visit.Username
+                                    """.format(column), [searchterm])
     elif searchType == "OwnerOverview":
-        result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumProp
+        if range:
+            result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumProp
+                                    FROM Property JOIN User ON User.Username = Property.Owner
+                                    WHERE UserType = 'OWNER'
+                                    GROUP BY Property.Owner
+                                    HAVING {} BETWEEN {} AND {}
+                                    ORDER BY Name""".format(column, lower, upper))
+        else:
+            result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumProp
                                 FROM Property JOIN User ON User.Username = Property.Owner
                                 WHERE UserType = 'OWNER' AND User.{} = %s
                                 GROUP BY Property.Owner
                                 """.format(column), [searchterm])
+
 
     users = cur.fetchall()
 
@@ -563,7 +593,7 @@ def OwnerOverview():
     cur = mysql.connection.cursor()
 
     # Get articles
-    result = cur.execute("SELECT User.Username, Email, COUNT(*) as NumProp FROM User join Property on User.Username = Property.Owner GROUP BY Username") 
+    result = cur.execute("SELECT User.Username, Email, COUNT(*) as NumProp FROM User join Property on User.Username = Property.Owner GROUP BY Username")
 
     owners = cur.fetchall()
 
@@ -594,8 +624,8 @@ def DeleteOwnerAccount(username):
 
 
 @app.route('/SortBy/', methods=['POST'])
-@is_logged_in  
-def SortBy():  
+@is_logged_in
+def SortBy():
     column = request.form['column']
     sortType = request.form['sortType']
     print(sortType)
@@ -607,21 +637,21 @@ def SortBy():
     if sortType == "OwnerOverview":
         result = cur.execute("""SELECT User.Username, Email, COUNT(*) as NumProp
                             FROM User JOIN Property ON User.Username = Property.Owner
-                            WHERE UserType = 'OWNER' 
+                            WHERE UserType = 'OWNER'
                             GROUP BY Property.Owner
                             ORDER BY {}""".format(column))
     elif sortType == "VisitorOverview":
         result = cur.execute("""SELECT User.Username, Email, COUNT(*) as NumVisits
                             FROM Visit JOIN User ON User.Username = Visit.Username
-                            WHERE UserType = 'VISITOR' 
-                            GROUP BY Visit.Username 
+                            WHERE UserType = 'VISITOR'
+                            GROUP BY Visit.Username
                             ORDER BY {}""".format(column))
 
     elif sortType == "ConfirmedProperties":
         result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
                             FROM Property LEFT JOIN Visit ON ID = PropertyID
                             WHERE ApprovedBy IS NOT NULL
-                            GROUP BY ID 
+                            GROUP BY ID
                             ORDER BY {}""".format(column))
         properties = cur.fetchall()
         cur.close()
@@ -632,7 +662,7 @@ def SortBy():
         result = cur.execute("""SELECT *
                             FROM Property
                             WHERE ApprovedBy IS NOT NULL
-                            GROUP BY ID 
+                            GROUP BY ID
                             ORDER BY {}""".format(column))
         properties = cur.fetchall()
         cur.close()
@@ -642,7 +672,7 @@ def SortBy():
     elif sortType == "ApprovedItems":
         result = cur.execute("""SELECT *
                             FROM FarmItem
-                            WHERE IsApproved 
+                            WHERE IsApproved
                             ORDER BY {}""".format(column))
         items = cur.fetchall()
         cur.close()
@@ -652,7 +682,7 @@ def SortBy():
     elif sortType == "PendingItems":
         result = cur.execute("""SELECT *
                             FROM FarmItem
-                            WHERE NOT IsApproved 
+                            WHERE NOT IsApproved
                             ORDER BY {}""".format(column))
         items = cur.fetchall()
         cur.close()
@@ -754,36 +784,82 @@ def SearchProperties():
         else:
             searchterm = 0
 
+    range = False
+    if column in ['NumVisits', 'AverageRating']:
+        if "-" in searchterm:
+            range = True
+            numvallist = searchterm.split("-")
+            lower = float(numvallist[0])
+            upper = float(numvallist[1])
+
     # Create cursor
     cur = mysql.connection.cursor()
 
     # Execute for each type of search
     if searchType == 'ConfirmedProperties':
-        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
-                                FROM Property LEFT JOIN Visit ON ID = PropertyID
-                                WHERE ApprovedBy IS NOT NULL AND {} = %s
-                                GROUP BY ID
-                                ORDER BY Name""".format(column), [searchterm])
+        if range:
+            result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
+                                    FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                    WHERE ApprovedBy IS NOT NULL
+                                    GROUP BY ID
+                                    HAVING {} BETWEEN {} AND {}
+                                    ORDER BY Name""".format(column, lower, upper))
+        else:
+            result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
+                                    FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                    WHERE ApprovedBy IS NOT NULL AND {} = %s
+                                    GROUP BY ID
+                                    ORDER BY Name""".format(column), [searchterm])
 
     elif searchType == 'UnconfirmedProperties':
-        result = cur.execute("SELECT * FROM Property WHERE ApprovedBy IS NULL AND {} = %s ORDER BY Name".format(column), [searchterm])
+        if range:
+            result = cur.execute("""SELECT * FROM Property
+                                    WHERE ApprovedBy IS NULL
+                                    HAVING {} BETWEEN {} AND {}
+                                    ORDER BY Name """.format(column, lower, upper))
+        else:
+            result = cur.execute("""SELECT * FROM Property WHERE ApprovedBy IS NULL AND {} = %s ORDER BY Name""".format(column), [searchterm])
 
     elif searchType == 'VisitorFunctionality':
-        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
-                                FROM Property LEFT JOIN Visit ON ID = PropertyID
-                                WHERE ApprovedBy IS NOT NULL AND IsPublic AND {} = %s
-                                GROUP BY ID
-                                ORDER BY Name""".format(column), [searchterm])
+        if range:
+            result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                                    FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                    WHERE ApprovedBy IS NOT NULL AND IsPublic
+                                    GROUP BY ID
+                                    HAVING {} BETWEEN {} AND {}
+                                    ORDER BY Name""".format(column, lower, upper))
+        else:
+            result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                                    FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                    WHERE ApprovedBy IS NOT NULL AND IsPublic AND {} = %s
+                                    GROUP BY ID
+                                    ORDER BY Name""".format(column), [searchterm])
 
     elif searchType == 'OwnerFunctionality':
-        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+        if range:
+            result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                                    FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                    WHERE Owner = %s
+                                    GROUP BY ID
+                                    HAVING {} BETWEEN {} AND {}
+                                    ORDER BY Name""".format(column, lower, upper), [session['username']])
+        else:
+            result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
                                 FROM Property LEFT JOIN Visit ON ID = PropertyID
                                 WHERE Owner = %s AND {} = %s
                                 GROUP BY ID
                                 ORDER BY Name""".format(column), [session['username'], searchterm])
 
     elif searchType == 'OtherOwnersProperties':
-        result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+        if range:
+            result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
+                                    FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                    WHERE ApprovedBy IS NOT NULL AND IsPublic AND NOT Owner = %s AND {} = %s
+                                    GROUP BY ID
+                                    HAVING {} BETWEEN {} AND {}
+                                    ORDER BY Name""".format(column, lower, upper), [session['username']])
+        else:
+            result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
                                 FROM Property LEFT JOIN Visit ON ID = PropertyID
                                 WHERE ApprovedBy IS NOT NULL AND IsPublic AND NOT Owner = %s AND {} = %s
                                 GROUP BY ID
@@ -1026,3 +1102,20 @@ def UnlogVisit(ID):
 if __name__ == '__main__':
     app.secret_key='secret123'
     app.run(debug=True)
+<<<<<<< HEAD
+=======
+
+
+# SELECT Property.Name, User.Username, Email, Street, City, Zip, Size, COUNT(Rating) AS NumVisits, AVG(Rating) AS AverageRating, PropertyType, IsPublic, IsCommercial, ID, FarmItem.Name
+# FROM Property
+# JOIN User On Owner = User.Username
+# LEFT JOIN Visit ON Visit.PropertyID = ID
+# LEFT JOIN Has ON Has.PropertyID = ID
+# JOIN FarmItem ON ItemName = FarmItem.Name
+# GROUP BY ID
+# ORDER BY Property.Name
+
+# Select Property.Name, FarmItem.Name
+# from Has Join Property ON Has.PropertyID = ID
+# JOIN FarmItem ON ItemName = FarmItem.Name
+>>>>>>> ca9ef6dada7f1a101ac5f8d6908a06f708ddc27c
