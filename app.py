@@ -480,11 +480,8 @@ def VisitorOverview():
     cur = mysql.connection.cursor()
 
     # Get articles
-<<<<<<< HEAD
-    result = cur.execute("SELECT Visit.Username, Email, COUNT(Rating) as NumVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username") 
-=======
+    result = cur.execute("SELECT Visit.Username, Email, COUNT(Rating) as NumVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username")
     result = cur.execute("SELECT Visit.Username, Email, COUNT(*) as NumVisits FROM User join Visit on User.Username = Visit.Username GROUP BY Username")
->>>>>>> ca9ef6dada7f1a101ac5f8d6908a06f708ddc27c
 
     visitors = cur.fetchall()
 
@@ -558,8 +555,9 @@ def SearchUsers():
         else:
             result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumVisits
                                     FROM Visit JOIN User ON User.Username = Visit.Username
-                                    WHERE UserType = 'VISITOR' AND User.{} = %s
+                                    WHERE UserType = 'VISITOR'
                                     GROUP BY Visit.Username
+                                    HAVING {} = %s
                                     """.format(column), [searchterm])
     elif searchType == "OwnerOverview":
         if range:
@@ -572,8 +570,9 @@ def SearchUsers():
         else:
             result = cur.execute("""SELECT User.Username AS Username,  Email, COUNT(*) AS NumProp
                                 FROM Property JOIN User ON User.Username = Property.Owner
-                                WHERE UserType = 'OWNER' AND User.{} = %s
+                                WHERE UserType = 'OWNER'
                                 GROUP BY Property.Owner
+                                HAVING {} = %s
                                 """.format(column), [searchterm])
 
 
@@ -807,8 +806,9 @@ def SearchProperties():
         else:
             result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating
                                     FROM Property LEFT JOIN Visit ON ID = PropertyID
-                                    WHERE ApprovedBy IS NOT NULL AND {} = %s
+                                    WHERE ApprovedBy IS NOT NULL
                                     GROUP BY ID
+                                    HAVING {} = %s
                                     ORDER BY Name""".format(column), [searchterm])
 
     elif searchType == 'UnconfirmedProperties':
@@ -831,8 +831,9 @@ def SearchProperties():
         else:
             result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
                                     FROM Property LEFT JOIN Visit ON ID = PropertyID
-                                    WHERE ApprovedBy IS NOT NULL AND IsPublic AND {} = %s
+                                    WHERE ApprovedBy IS NOT NULL AND IsPublic
                                     GROUP BY ID
+                                    HAVING {} = %s
                                     ORDER BY Name""".format(column), [searchterm])
 
     elif searchType == 'OwnerFunctionality':
@@ -845,25 +846,27 @@ def SearchProperties():
                                     ORDER BY Name""".format(column, lower, upper), [session['username']])
         else:
             result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, ApprovedBy, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
-                                FROM Property LEFT JOIN Visit ON ID = PropertyID
-                                WHERE Owner = %s AND {} = %s
-                                GROUP BY ID
-                                ORDER BY Name""".format(column), [session['username'], searchterm])
+                                    FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                    WHERE Owner = %s
+                                    GROUP BY ID
+                                    HAVING {} = %s
+                                    ORDER BY Name""".format(column), [session['username'], searchterm])
 
     elif searchType == 'OtherOwnersProperties':
         if range:
             result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
                                     FROM Property LEFT JOIN Visit ON ID = PropertyID
-                                    WHERE ApprovedBy IS NOT NULL AND IsPublic AND NOT Owner = %s AND {} = %s
+                                    WHERE ApprovedBy IS NOT NULL AND IsPublic AND NOT Owner = %s
                                     GROUP BY ID
                                     HAVING {} BETWEEN {} AND {}
                                     ORDER BY Name""".format(column, lower, upper), [session['username']])
         else:
             result = cur.execute("""SELECT Name, Street, City, Zip, Size, PropertyType, IsPublic, IsCommercial, ID, AVG(Rating) AS AverageRating, COUNT(Rating) AS NumVisits
-                                FROM Property LEFT JOIN Visit ON ID = PropertyID
-                                WHERE ApprovedBy IS NOT NULL AND IsPublic AND NOT Owner = %s AND {} = %s
-                                GROUP BY ID
-                                ORDER BY Name""".format(column), [session['username'], searchterm])
+                                    FROM Property LEFT JOIN Visit ON ID = PropertyID
+                                    WHERE ApprovedBy IS NOT NULL AND IsPublic AND NOT Owner = %s
+                                    GROUP BY ID
+                                    HAVING {} = %s
+                                    ORDER BY Name""".format(column), [session['username'], searchterm])
 
     properties = cur.fetchall()
 
@@ -1072,7 +1075,7 @@ def LogVisit(ID):
     cur = mysql.connection.cursor()
 
     result = cur.execute("INSERT INTO Visit(Username, PropertyID, VisitDate, Rating) VALUES(%s, %s, CURRENT_TIMESTAMP, %s)", [session['username'], ID, rating])
-    
+
     # Commit to DB
     mysql.connection.commit()
 
@@ -1102,20 +1105,3 @@ def UnlogVisit(ID):
 if __name__ == '__main__':
     app.secret_key='secret123'
     app.run(debug=True)
-<<<<<<< HEAD
-=======
-
-
-# SELECT Property.Name, User.Username, Email, Street, City, Zip, Size, COUNT(Rating) AS NumVisits, AVG(Rating) AS AverageRating, PropertyType, IsPublic, IsCommercial, ID, FarmItem.Name
-# FROM Property
-# JOIN User On Owner = User.Username
-# LEFT JOIN Visit ON Visit.PropertyID = ID
-# LEFT JOIN Has ON Has.PropertyID = ID
-# JOIN FarmItem ON ItemName = FarmItem.Name
-# GROUP BY ID
-# ORDER BY Property.Name
-
-# Select Property.Name, FarmItem.Name
-# from Has Join Property ON Has.PropertyID = ID
-# JOIN FarmItem ON ItemName = FarmItem.Name
->>>>>>> ca9ef6dada7f1a101ac5f8d6908a06f708ddc27c
