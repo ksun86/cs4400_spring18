@@ -169,7 +169,7 @@ def AddProperty():
 
         # Execute query
         cur.execute("INSERT INTO Property(ID, Name, Size, IsCommercial, IsPublic, Street, City, Zip, PropertyType, Owner) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (propertyID, propertyName, size, isCommercial, isPublic, address, city, zipCode, propertyType, session['username']))
+            (propertyID, propertyName, size, isCommercial, isPublic, street, city, zipCode, propertyType, session['username']))
 
         # Commit to DB
         mysql.connection.commit()
@@ -324,18 +324,6 @@ def ManageProperty(ID, manageType):
     # Get form
     form = AddPropertyForm(request.form)
 
-    # Populate property form fields
-    form.propertyName.data = prop['Name']
-    form.street.data = prop['Street']
-    form.city.data = prop['City']
-    form.zipCode.data = prop['Zip']
-    form.size.data = prop['Size']
-    form.propertyType.data = prop['PropertyType']
-    form.isPublic.data = prop['IsPublic']
-    form.isCommercial.data = prop['IsCommercial']
-    session['propertyID'] = ID
-    session['propertyType'] = prop['PropertyType']
-    session['propertyName'] = prop['Name']
 
     if request.method == 'POST' and form.validate():
         propertyName = request.form['propertyName']
@@ -376,6 +364,19 @@ def ManageProperty(ID, manageType):
         cur.close()
 
         return redirect(url_for('ManageProperty', ID=ID, manageType=manageType))
+
+    # Populate property form fields
+    form.propertyName.data = prop['Name']
+    form.street.data = prop['Street']
+    form.city.data = prop['City']
+    form.zipCode.data = prop['Zip']
+    form.size.data = prop['Size']
+    form.propertyType.data = prop['PropertyType']
+    form.isPublic.data = prop['IsPublic']
+    form.isCommercial.data = prop['IsCommercial']
+    session['propertyID'] = ID
+    session['propertyType'] = prop['PropertyType']
+    session['propertyName'] = prop['Name']
 
     return render_template('ManageProperty.html', form=form, property=prop)
 
@@ -428,9 +429,9 @@ def DeleteProperty(ID):
     #Close connection
     cur.close()
 
-    if session['UserType'] == 'ADMIN':
+    if session['userType'] == 'ADMIN':
         return redirect(url_for('AdminFunctionality'))
-    elif session['UserType'] == 'OWNER':
+    elif session['userType'] == 'OWNER':
         return redirect(url_for('OwnerFunctionality'))
 
 @app.route('/RemoveItem/<string:name>', methods=['POST'])

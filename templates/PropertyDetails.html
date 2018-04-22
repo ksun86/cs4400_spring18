@@ -38,9 +38,10 @@
                 <input type="submit" value="Log Visit" class="btn btn-primary">
             </form>
         {% endif %}
-        <a href="/VisitorFunctionality" class="btn btn-primary">Back</a>
+        <div class="text-right"><a href="/VisitorFunctionality" class="btn btn-primary">Back</a></div>
+
     {% elif session.userType == 'OWNER' %}
-        <a href="/OwnerFunctionality" class="btn btn-primary">Back</a>
+        <div class="text-right"><a href="/OwnerFunctionality" class="btn btn-primary">Back</a></div>
     {% endif %}
 
 {% endblock %}
