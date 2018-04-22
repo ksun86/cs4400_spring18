@@ -2,7 +2,7 @@
 
 {% block body %}
     <h1>All Visitors in System</h1>
- 
+
 
     <table class="table table-striped">
         <tr>
@@ -12,7 +12,6 @@
             <th>Logged Visits</th>
             <th>Delete Log History</th>
         </tr>
-        <!-- we'll need a for loop to iterate through for each row of the table -->
             {% for visitor in users %}
             <tr>
                 <td>{{visitor.Username}}</td>
@@ -23,7 +22,7 @@
                     </form>
                 </td>
                 <td>{{visitor.Email}}</td>
-                <td>{{visitor.NumVisits}}</td>  
+                <td>{{visitor.NumVisits}}</td>
                 <td>
                     <form action="{{url_for('DeleteLogHistory', username=visitor.Username)}}" method="post">
                         <input type="hidden" name="_method" value="DELETE">
@@ -48,7 +47,7 @@
             <input type="submit" value="Search" class="btn btn-submit">
         </form>
     </div>
-
+    <br>
     <div class="text-left">
         <form action="{{url_for('SortBy')}}" method="post">
             <input type="hidden" name="sortType" value="VisitorOverview">
@@ -62,10 +61,9 @@
         </form>
     </div>
 
-    <!-- insert searching functionality -->
 
     <div class="text-right">
         <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
-    </div>
+    </div><br>
 
 {% endblock %}

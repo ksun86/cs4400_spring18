@@ -324,6 +324,18 @@ def ManageProperty(ID, manageType):
     # Get form
     form = AddPropertyForm(request.form)
 
+    # Populate property form fields
+    form.propertyName.data = prop['Name']
+    form.street.data = prop['Street']
+    form.city.data = prop['City']
+    form.size.data = prop['Size']
+    form.propertyType.data = prop['PropertyType']
+    form.isPublic.data = prop['IsPublic']
+    form.isCommercial.data = prop['IsCommercial']
+    session['propertyID'] = ID
+    session['propertyType'] = prop['PropertyType']
+    session['propertyName'] = prop['Name']
+
 
     if request.method == 'POST' and form.validate():
         propertyName = request.form['propertyName']
@@ -365,18 +377,7 @@ def ManageProperty(ID, manageType):
 
         return redirect(url_for('ManageProperty', ID=ID, manageType=manageType))
 
-    # Populate property form fields
-    form.propertyName.data = prop['Name']
-    form.street.data = prop['Street']
-    form.city.data = prop['City']
     form.zipCode.data = prop['Zip']
-    form.size.data = prop['Size']
-    form.propertyType.data = prop['PropertyType']
-    form.isPublic.data = prop['IsPublic']
-    form.isCommercial.data = prop['IsCommercial']
-    session['propertyID'] = ID
-    session['propertyType'] = prop['PropertyType']
-    session['propertyName'] = prop['Name']
 
     return render_template('ManageProperty.html', form=form, property=prop)
 

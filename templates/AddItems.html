@@ -6,9 +6,9 @@
   <form method="POST" action="">
     <h3>Select items for your {{session.propertyType}}:</h3>
     <div class="form-group">
-      {{render_field(form.crops, class_="form-control")}}
-      {{render_field(form.animals, class_="form-control")}}
+      {{render_field(form.crops, class_="form-control")}}<br>
+      {{render_field(form.animals, class_="form-control")}}<br>
     </div>
-    <p><input type="submit" class="btn btn-primary" value="Submit"></p>
+    <div class="text-right"><input type="submit" class="btn btn-primary" value="Submit"></div><br>
   </form>
 {% endblock %}

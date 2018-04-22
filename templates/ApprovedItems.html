@@ -36,8 +36,21 @@
             <input type="submit" value="Search" class="btn btn-submit">
         </form>
     </div>
-
+    <br>
     <div class="text-left">
+        <form action="{{url_for('SortBy')}}" method="post">
+            <input type="hidden" name="sortType" value="ApprovedItems">
+            <select name="column">
+                <option value="">Sort by</option>
+                <option value="Name">Name</option>
+                <option value="Type">Type</option>
+            </select><br>
+            <input type="submit" value="Sort" class="btn btn-submit">
+        </form>
+    </div>
+
+    <div class="text-center">
+        <p><strong>Add a new item:</strong></p>
         <form action="{{url_for('AddItem')}}" method="post">
             <input type="hidden" name="_method" value="ADD">
             <input type="hidden" name="approved" value="True">
@@ -54,21 +67,8 @@
         </form>
     </div>
 
-    <div class="text-left">
-        <form action="{{url_for('SortBy')}}" method="post">
-            <input type="hidden" name="sortType" value="ApprovedItems">
-            <select name="column">
-                <option value="">Sort by</option>
-                <option value="Name">Name</option>
-                <option value="Type">Type</option>
-            </select><br>
-            <input type="submit" value="Sort" class="btn btn-submit">
-        </form>
-    </div>
-
-
     <div class="text-right">
         <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
-    </div>
+    </div><br>
 
 {% endblock %}

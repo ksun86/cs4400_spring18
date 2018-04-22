@@ -24,7 +24,7 @@
 
     <div class="text-left">
         <form action="{{url_for('AddItemProp')}}" method="post">
-          <p>Add item to your property</p>
+          <p><strong>Add item to your property</strong></p>
             <input type="hidden" name="_method" value="ADD">
             <select name="item">
               <option value="">Select Item Type</option>
@@ -35,10 +35,11 @@
             <input type="submit" value="Add Item" class="btn btn-submit">
         </form>
     </div>
+    <br>
 
     {% if session.userType == 'OWNER' %}
-      <div class="text-center">
-        <p>Request approval for new item</p>
+      <div class="text-left">
+        <p><strong>Request approval for new item</strong></p>
           <form action="{{url_for('AddItem')}}" method="post">
               <input type="hidden" name="_method" value="Request">
               <input type="hidden" name="approved" value="">
@@ -54,11 +55,13 @@
               <input type="submit" value="Submit Request" class="btn btn-submit">
           </form>
       </div>
-    {% endif %}
-
-
-    <div class="text-right">
+      <div class="text-right">
+        <a href="/ManageProperty/{{session.propertyID}}/o" class="btn btn-primary">Back</a>
+      </div>
+    {% elif session.userType == 'ADMIN' %}
+      <div class="text-right">
         <a href="/AdminFunctionality" class="btn btn-primary">Back</a>
-    </div>
+      </div>
+    {% endif %}
 
 {% endblock %}
