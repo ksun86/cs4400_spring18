@@ -594,7 +594,7 @@ def OwnerOverview():
     cur = mysql.connection.cursor()
 
     # Get articles
-    result = cur.execute("SELECT User.Username, Email, COUNT(*) as NumProp FROM User join Property on User.Username = Property.Owner GROUP BY Username")
+    result = cur.execute("SELECT User.Username, Email, COUNT(Property.ID) as NumProp FROM User left join Property on User.Username = Property.Owner WHERE UserType='OWNER' GROUP BY Username")
 
     owners = cur.fetchall()
 
@@ -986,7 +986,7 @@ def SearchItems():
     if searchterm == '':
         return redirect(url_for('ApprovedItems'))
 
-    result = cur.execute("SELECT * FROM FarmItem WHERE {} = {} ORDER BY Name".format(column, searchterm))
+    result = cur.execute("SELECT * FROM FarmItem WHERE {} = %s ORDER BY Name".format(column), [searchterm])
 
     items = cur.fetchall()
 
