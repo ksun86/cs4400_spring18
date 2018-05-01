@@ -2,6 +2,7 @@ from flask import Flask, render_template, flash, redirect, url_for, session, req
 from flask_mysqldb import MySQL
 from wtforms import Form, StringField, TextAreaField, PasswordField, SelectField, BooleanField, IntegerField, FloatField, SelectMultipleField, validators
 from passlib.hash import sha256_crypt
+from wtforms.fields.html5 import EmailField
 from functools import wraps
 import enum
 
@@ -84,7 +85,7 @@ def Logout():
 # User Registration Form Class
 class RegisterForm(Form):
     username = StringField('Username', [validators.Length(min=3, max=25)])
-    email = StringField('Email', [validators.Length(min=6, max=50)])
+    email = EmailField('Email', [validators.DataRequired(), validators.Email()])
     password = PasswordField('Password', [
         validators.Length(min=8, max=50),
         validators.DataRequired(),

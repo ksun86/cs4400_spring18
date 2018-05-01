@@ -30,7 +30,7 @@
                 <td>{{property.PropertyType}}</td>
                 <td>{% if property.IsPublic == 1 %}Yes{% else %}No{% endif %}</td>
                 <td>{% if property.IsCommercial == 1 %}Yes{% else %}No{% endif %}</td>
-                <td>{% if ApprovedBy %}Yes{% else %}No{% endif %}</td>
+                <td>{% if property.ApprovedBy %}Yes{% else %}No{% endif %}</td>
                 <td>{{property.NumVisits}}</td>
                 <td>{% if property.AverageRating %}{{"%.1f"|format(property.AverageRating)}}{% else %}{{property.AverageRating}}{% endif %}</td>
             </tr>
